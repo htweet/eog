@@ -1,12 +1,20 @@
-import { Bell, Menu, User } from "lucide-react";
+import { Bell, Menu, User, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
-import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-interface HeaderProps {
-  userName?: string;
-}
+export function Header() {
+  const { user, userRole, signOut } = useAuth();
+  
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  const roleLabel = userRole === 'requester' ? 'Requester' : userRole === 'voucher' ? 'Voucher' : '';
 
-export function Header({ userName = "Guest" }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
       <div className="container flex h-16 items-center justify-between">
@@ -39,15 +47,53 @@ export function Header({ userName = "Guest" }: HeaderProps) {
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
           </Button>
 
-          {/* Profile */}
-          <Button variant="ghost" size="icon" className="hidden md:flex">
-            <User className="h-5 w-5" />
-          </Button>
+          {/* Profile Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="hidden md:flex">
+                <User className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-3 py-2">
+                <p className="font-medium text-foreground">{displayName}</p>
+                {roleLabel && (
+                  <p className="text-xs text-muted-foreground capitalize">{roleLabel}</p>
+                )}
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Mobile menu */}
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-3 py-2">
+                <p className="font-medium text-foreground">{displayName}</p>
+                {roleLabel && (
+                  <p className="text-xs text-muted-foreground capitalize">{roleLabel}</p>
+                )}
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Browse</DropdownMenuItem>
+              <DropdownMenuItem>My Tasks</DropdownMenuItem>
+              <DropdownMenuItem>How it Works</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
