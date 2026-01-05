@@ -14,16 +14,221 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          is_verified: boolean | null
+          trust_score: number | null
+          wallet_balance: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          is_verified?: boolean | null
+          trust_score?: number | null
+          wallet_balance?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          is_verified?: boolean | null
+          trust_score?: number | null
+          wallet_balance?: number | null
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string
+          rating: number | null
+          reviewer_id: string
+          task_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          rating?: number | null
+          reviewer_id: string
+          task_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          rating?: number | null
+          reviewer_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          address: string
+          bounty_amount: number
+          category: string
+          checklist: Json | null
+          created_at: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          requester_id: string
+          status: string | null
+          title: string
+          voucher_id: string | null
+        }
+        Insert: {
+          address: string
+          bounty_amount: number
+          category: string
+          checklist?: Json | null
+          created_at?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          requester_id: string
+          status?: string | null
+          title: string
+          voucher_id?: string | null
+        }
+        Update: {
+          address?: string
+          bounty_amount?: number
+          category?: string
+          checklist?: Json | null
+          created_at?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          requester_id?: string
+          status?: string | null
+          title?: string
+          voucher_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      verifications: {
+        Row: {
+          ai_analysis_score: number | null
+          completed_checklist: Json | null
+          device_timestamp: string | null
+          gps_latitude: number | null
+          gps_longitude: number | null
+          id: string
+          submitted_at: string | null
+          task_id: string
+          video_url: string
+        }
+        Insert: {
+          ai_analysis_score?: number | null
+          completed_checklist?: Json | null
+          device_timestamp?: string | null
+          gps_latitude?: number | null
+          gps_longitude?: number | null
+          id?: string
+          submitted_at?: string | null
+          task_id: string
+          video_url: string
+        }
+        Update: {
+          ai_analysis_score?: number | null
+          completed_checklist?: Json | null
+          device_timestamp?: string | null
+          gps_latitude?: number | null
+          gps_longitude?: number | null
+          id?: string
+          submitted_at?: string | null
+          task_id?: string
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "requester" | "voucher" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +355,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["requester", "voucher", "admin"],
+    },
   },
 } as const
