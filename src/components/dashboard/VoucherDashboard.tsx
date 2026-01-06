@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, DollarSign, Star, CheckCircle, Clock, Briefcase, TrendingUp } from "lucide-react";
+import { ReviewsList } from "@/components/review/ReviewsList";
+import { MapPin, DollarSign, Star, CheckCircle, Clock, Briefcase, TrendingUp, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Task {
@@ -79,16 +80,20 @@ export function VoucherDashboard() {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, "default" | "secondary" | "outline"> = {
-      assigned: "default",
-      completed: "outline",
+    const colors: Record<string, string> = {
+      assigned: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+      pending_review: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+      completed: "bg-primary/10 text-primary border-primary/20",
     };
     return (
-      <Badge variant={variants[status] || "secondary"}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+      <Badge className={colors[status] || ""} variant="outline">
+        {status.replace("_", " ").toUpperCase()}
       </Badge>
     );
   };
+
+  // Include pending_review in active tasks
+  const activeTasks = myTasks.filter(t => t.status === "assigned" || t.status === "pending_review");
 
   return (
     <div className="space-y-6">
@@ -193,7 +198,7 @@ export function VoucherDashboard() {
         <CardContent>
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">Loading...</div>
-          ) : myTasks.filter(t => t.status === "assigned").length === 0 ? (
+          ) : activeTasks.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">No active tasks</p>
               <Button onClick={() => navigate("/browse")}>
@@ -203,13 +208,18 @@ export function VoucherDashboard() {
             </div>
           ) : (
             <div className="space-y-4">
-              {myTasks.filter(t => t.status === "assigned").map((task) => (
+              {activeTasks.map((task) => (
                 <div
                   key={task.id}
-                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+                  onClick={() => navigate(`/task/${task.id}`)}
                 >
                   <div className="flex items-center gap-4">
-                    <Clock className="h-5 w-5 text-category-auto" />
+                    {task.status === "pending_review" ? (
+                      <Eye className="h-5 w-5 text-blue-500" />
+                    ) : (
+                      <Clock className="h-5 w-5 text-category-auto" />
+                    )}
                     <div>
                       <p className="font-medium text-foreground">{task.title}</p>
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -260,6 +270,22 @@ export function VoucherDashboard() {
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Reviews Section */}
+      {stats.completed > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Star className="h-5 w-5" />
+              Recent Reviews
+            </CardTitle>
+            <CardDescription>Feedback from your completed tasks</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ReviewsList userId={user?.id} limit={3} />
           </CardContent>
         </Card>
       )}
