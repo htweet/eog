@@ -11,6 +11,7 @@ import Profile from "./pages/Profile";
 import Browse from "./pages/Browse";
 import CreateTask from "./pages/CreateTask";
 import TaskDetail from "./pages/TaskDetail";
+import VerifyTask from "./pages/VerifyTask";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <TaskDetail />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/task/:id/verify" 
+              element={
+                <ProtectedRoute>
+                  <VerifyTask />
                 </ProtectedRoute>
               } 
             />
