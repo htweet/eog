@@ -9,6 +9,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Browse from "./pages/Browse";
+import CreateTask from "./pages/CreateTask";
+import TaskDetail from "./pages/TaskDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +45,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Browse />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/create-task" 
+              element={
+                <ProtectedRoute>
+                  <CreateTask />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/task/:id" 
+              element={
+                <ProtectedRoute>
+                  <TaskDetail />
                 </ProtectedRoute>
               } 
             />

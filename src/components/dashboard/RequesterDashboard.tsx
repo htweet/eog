@@ -181,7 +181,8 @@ export function RequesterDashboard() {
               {tasks.slice(0, 5).map((task) => (
                 <div
                   key={task.id}
-                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+                  onClick={() => navigate(`/task/${task.id}`)}
                 >
                   <div className="flex items-center gap-4">
                     {getStatusIcon(task.status)}
@@ -196,7 +197,7 @@ export function RequesterDashboard() {
                       <p className="text-xs text-muted-foreground capitalize">{task.category}</p>
                     </div>
                     {getStatusBadge(task.status)}
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/task/${task.id}`); }}>
                       <Eye className="h-4 w-4" />
                     </Button>
                   </div>

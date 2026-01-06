@@ -117,6 +117,7 @@ export function ActiveBountiesSection() {
                   category={getCategoryType(task.category)}
                   timePosted={getTimeAgo(task.created_at)}
                   urgency={getUrgency(task.created_at)}
+                  onClick={() => navigate(`/task/${task.id}`)}
                 />
               </div>
             ))}
