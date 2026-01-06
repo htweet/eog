@@ -5,10 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { BountyCard } from "@/components/BountyCard";
+import { TaskMapView } from "@/components/task/TaskMapView";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Flame, Search, Filter, Loader2, MapPin } from "lucide-react";
+import { Flame, Search, Filter, Loader2, MapPin, List, Map } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Select,
@@ -49,9 +50,18 @@ export default function Browse() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     fetchTasks();
+    // Get user location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {}
+      );
+    }
   }, []);
 
   useEffect(() => {
@@ -181,6 +191,27 @@ export default function Browse() {
           <p className="text-muted-foreground">
             Find verification tasks near you and start earning
           </p>
+          {/* View mode toggle */}
+          <div className="flex gap-2 mt-4">
+            <Button
+              variant={viewMode === "list" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="gap-2"
+            >
+              <List className="h-4 w-4" />
+              List
+            </Button>
+            <Button
+              variant={viewMode === "map" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("map")}
+              className="gap-2"
+            >
+              <Map className="h-4 w-4" />
+              Map
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -253,7 +284,7 @@ export default function Browse() {
           {loading ? "Loading..." : `${filteredTasks.length} tasks found`}
         </div>
 
-        {/* Tasks Grid */}
+        {/* Tasks View */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -264,6 +295,8 @@ export default function Browse() {
             <p className="text-lg font-medium text-foreground">No tasks found</p>
             <p className="text-muted-foreground">Try adjusting your filters</p>
           </div>
+        ) : viewMode === "map" ? (
+          <TaskMapView tasks={filteredTasks} userLocation={userLocation} />
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
             {filteredTasks.map((task, index) => (
