@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
+import { TaskCompletionBanner } from "@/components/task/TaskCompletionBanner";
+import { ReviewsList } from "@/components/review/ReviewsList";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft,
@@ -24,7 +25,7 @@ import {
   Smartphone,
   Package,
   Navigation,
-  AlertTriangle,
+  Star,
 } from "lucide-react";
 
 interface Task {
@@ -371,62 +372,66 @@ export default function TaskDetail() {
           </Card>
         )}
 
-        {/* Actions */}
-        <Card>
-          <CardContent className="pt-6">
-            {canClaim && (
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={claimTask}
-                disabled={claiming}
-              >
-                {claiming ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Claiming...
-                  </>
-                ) : (
-                  "Claim This Task"
-                )}
-              </Button>
-            )}
+        {/* Status Banner */}
+        {(task.status === "completed" || task.status === "disputed" || task.status === "pending_review") && (
+          <TaskCompletionBanner
+            status={task.status}
+            bountyAmount={task.bounty_amount}
+            isRequester={isRequester}
+            isVoucher={isVoucher}
+            taskId={task.id}
+          />
+        )}
 
-            {isVoucher && task.status === "assigned" && (
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={() => navigate(`/task/${task.id}/verify`)}
-              >
-                Start Verification
-              </Button>
-            )}
+        {/* Actions for other statuses */}
+        {task.status !== "completed" && task.status !== "disputed" && task.status !== "pending_review" && (
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              {canClaim && (
+                <Button
+                  className="w-full"
+                  size="lg"
+                  onClick={claimTask}
+                  disabled={claiming}
+                >
+                  {claiming ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Claiming...
+                    </>
+                  ) : (
+                    "Claim This Task"
+                  )}
+                </Button>
+              )}
 
-            {isRequester && task.status === "pending_review" && (
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={() => navigate(`/task/${task.id}/review`)}
-              >
-                Review Verification
-              </Button>
-            )}
+              {isVoucher && task.status === "assigned" && (
+                <Button
+                  className="w-full"
+                  size="lg"
+                  onClick={() => navigate(`/task/${task.id}/verify`)}
+                >
+                  Start Verification
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
-            {task.status === "completed" && (
-              <div className="flex items-center justify-center gap-2 text-primary">
-                <CheckCircle2 className="h-5 w-5" />
-                <span className="font-medium">Task Completed</span>
-              </div>
-            )}
-
-            {task.status === "disputed" && (
-              <div className="flex items-center justify-center gap-2 text-destructive">
-                <AlertTriangle className="h-5 w-5" />
-                <span className="font-medium">Task Disputed</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Reviews Section (for completed tasks) */}
+        {task.status === "completed" && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Star className="h-5 w-5" />
+                Reviews
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ReviewsList taskId={task.id} />
+            </CardContent>
+          </Card>
+        )}
       </main>
       <BottomNav />
     </div>

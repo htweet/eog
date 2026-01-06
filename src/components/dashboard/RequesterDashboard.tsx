@@ -65,23 +65,29 @@ export function RequesterDashboard() {
     switch (status) {
       case "open": return <Clock className="h-4 w-4 text-category-general" />;
       case "assigned": return <AlertCircle className="h-4 w-4 text-category-auto" />;
+      case "pending_review": return <Eye className="h-4 w-4 text-blue-500" />;
       case "completed": return <CheckCircle className="h-4 w-4 text-accent" />;
       default: return <Clock className="h-4 w-4" />;
     }
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, "default" | "secondary" | "outline"> = {
-      open: "secondary",
-      assigned: "default",
-      completed: "outline",
+    const colors: Record<string, string> = {
+      open: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+      assigned: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+      pending_review: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+      completed: "bg-primary/10 text-primary border-primary/20",
+      disputed: "bg-destructive/10 text-destructive border-destructive/20",
     };
     return (
-      <Badge variant={variants[status] || "secondary"}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+      <Badge className={colors[status] || ""} variant="outline">
+        {status.replace("_", " ").toUpperCase()}
       </Badge>
     );
   };
+
+  // Filter tasks needing review
+  const pendingReviewTasks = tasks.filter(t => t.status === "pending_review");
 
   return (
     <div className="space-y-6">
@@ -158,6 +164,35 @@ export function RequesterDashboard() {
         <Plus className="mr-2 h-4 w-4" />
         Create New Task
       </Button>
+
+      {/* Pending Review Alert */}
+      {pendingReviewTasks.length > 0 && (
+        <Card className="bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-900">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                  <Eye className="h-5 w-5 text-blue-500" />
+                </div>
+                <div>
+                  <p className="font-semibold text-blue-700 dark:text-blue-400">
+                    {pendingReviewTasks.length} task{pendingReviewTasks.length > 1 ? "s" : ""} pending review
+                  </p>
+                  <p className="text-sm text-blue-600 dark:text-blue-500">
+                    Vouchers are waiting for your approval
+                  </p>
+                </div>
+              </div>
+              <Button 
+                size="sm" 
+                onClick={() => navigate(`/task/${pendingReviewTasks[0].id}/review`)}
+              >
+                Review Now
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* My Tasks */}
       <Card>
