@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
@@ -38,6 +39,7 @@ const categories = [
 ];
 
 export default function Browse() {
+  const navigate = useNavigate();
   const { user, userRole } = useAuth();
   const { toast } = useToast();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -277,7 +279,7 @@ export default function Browse() {
                   category={getCategoryType(task.category)}
                   timePosted={getTimeAgo(task.created_at)}
                   urgency="medium"
-                  onClick={() => claimTask(task.id)}
+                  onClick={() => navigate(`/task/${task.id}`)}
                 />
               </div>
             ))}

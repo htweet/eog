@@ -1,0 +1,434 @@
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Header } from "@/components/Header";
+import { BottomNav } from "@/components/BottomNav";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import {
+  ArrowLeft,
+  MapPin,
+  DollarSign,
+  Clock,
+  User,
+  CheckCircle2,
+  Circle,
+  Loader2,
+  Car,
+  Home,
+  Smartphone,
+  Package,
+  Navigation,
+  AlertTriangle,
+} from "lucide-react";
+
+interface Task {
+  id: string;
+  title: string;
+  category: string;
+  status: string;
+  bounty_amount: number;
+  address: string;
+  created_at: string;
+  latitude: number | null;
+  longitude: number | null;
+  requester_id: string;
+  voucher_id: string | null;
+  checklist: { id: number; label: string; required: boolean }[] | null;
+}
+
+interface Profile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  trust_score: number | null;
+  is_verified: boolean | null;
+}
+
+const categoryIcons: Record<string, React.ReactNode> = {
+  auto: <Car className="h-5 w-5" />,
+  realestate: <Home className="h-5 w-5" />,
+  electronics: <Smartphone className="h-5 w-5" />,
+  general: <Package className="h-5 w-5" />,
+};
+
+const categoryLabels: Record<string, string> = {
+  auto: "Automobiles",
+  realestate: "Real Estate",
+  electronics: "Electronics",
+  general: "General Items",
+};
+
+const statusColors: Record<string, string> = {
+  open: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  assigned: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  pending_review: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  completed: "bg-primary/10 text-primary border-primary/20",
+  disputed: "bg-destructive/10 text-destructive border-destructive/20",
+};
+
+export default function TaskDetail() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user, userRole } = useAuth();
+  const { toast } = useToast();
+
+  const [task, setTask] = useState<Task | null>(null);
+  const [requester, setRequester] = useState<Profile | null>(null);
+  const [voucher, setVoucher] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [claiming, setClaiming] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      fetchTask();
+    }
+  }, [id]);
+
+  const fetchTask = async () => {
+    if (!id) return;
+
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error || !data) {
+      console.error("Error fetching task:", error);
+      toast({
+        title: "Error",
+        description: "Task not found",
+        variant: "destructive",
+      });
+      navigate("/browse");
+      return;
+    }
+
+    // Type assertion for checklist
+    const taskData = {
+      ...data,
+      checklist: data.checklist as Task["checklist"],
+    };
+    setTask(taskData);
+
+    // Fetch requester profile
+    const { data: requesterData } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", data.requester_id)
+      .maybeSingle();
+    
+    if (requesterData) setRequester(requesterData);
+
+    // Fetch voucher profile if assigned
+    if (data.voucher_id) {
+      const { data: voucherData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", data.voucher_id)
+        .maybeSingle();
+      
+      if (voucherData) setVoucher(voucherData);
+    }
+
+    setLoading(false);
+  };
+
+  const claimTask = async () => {
+    if (!user || !task || userRole !== "voucher") return;
+
+    setClaiming(true);
+
+    const { error } = await supabase
+      .from("tasks")
+      .update({ voucher_id: user.id, status: "assigned" })
+      .eq("id", task.id)
+      .eq("status", "open");
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to claim task. It may have been claimed by someone else.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Task claimed!",
+        description: "You can now proceed with the verification",
+      });
+      fetchTask();
+    }
+
+    setClaiming(false);
+  };
+
+  const openInMaps = () => {
+    if (task?.latitude && task?.longitude) {
+      window.open(
+        `https://www.google.com/maps/dir/?api=1&destination=${task.latitude},${task.longitude}`,
+        "_blank"
+      );
+    } else if (task?.address) {
+      window.open(
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(task.address)}`,
+        "_blank"
+      );
+    }
+  };
+
+  const getTimeAgo = (date: string) => {
+    const now = new Date();
+    const created = new Date(date);
+    const diffMs = now.getTime() - created.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 60) return `${diffMins} min ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </main>
+      </div>
+    );
+  }
+
+  if (!task) {
+    return null;
+  }
+
+  const isRequester = user?.id === task.requester_id;
+  const isVoucher = user?.id === task.voucher_id;
+  const canClaim = userRole === "voucher" && task.status === "open" && !isRequester;
+
+  return (
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
+      <Header />
+      <main className="container max-w-3xl py-8">
+        {/* Back button */}
+        <Button
+          variant="ghost"
+          className="mb-6 gap-2"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
+
+        {/* Header Card */}
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  {categoryIcons[task.category]}
+                </div>
+                <div>
+                  <Badge className={statusColors[task.status]} variant="outline">
+                    {task.status.replace("_", " ").toUpperCase()}
+                  </Badge>
+                  <CardTitle className="mt-1">{task.title}</CardTitle>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="flex items-center gap-1 text-2xl font-bold text-primary">
+                  <DollarSign className="h-6 w-6" />
+                  {task.bounty_amount.toFixed(2)}
+                </div>
+                <p className="text-sm text-muted-foreground">Bounty</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                {categoryIcons[task.category]}
+                <span>{categoryLabels[task.category]}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <span>{getTimeAgo(task.created_at)}</span>
+              </div>
+            </div>
+
+            {/* Location */}
+            <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/50 p-4">
+              <MapPin className="mt-0.5 h-5 w-5 text-primary shrink-0" />
+              <div className="flex-1">
+                <p className="font-medium">{task.address}</p>
+                {task.latitude && task.longitude && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {task.latitude.toFixed(6)}, {task.longitude.toFixed(6)}
+                  </p>
+                )}
+              </div>
+              <Button variant="outline" size="sm" onClick={openInMaps} className="gap-2">
+                <Navigation className="h-4 w-4" />
+                Navigate
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* People involved */}
+        <div className="grid gap-4 md:grid-cols-2 mb-6">
+          {/* Requester */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>Requester</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3">
+                <Avatar>
+                  <AvatarImage src={requester?.avatar_url || undefined} />
+                  <AvatarFallback>
+                    {requester?.full_name?.[0]?.toUpperCase() || "R"}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium">{requester?.full_name || "Anonymous"}</p>
+                  {requester?.is_verified && (
+                    <Badge variant="secondary" className="text-xs">Verified</Badge>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Voucher */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>Voucher</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {voucher ? (
+                <div className="flex items-center gap-3">
+                  <Avatar>
+                    <AvatarImage src={voucher.avatar_url || undefined} />
+                    <AvatarFallback>
+                      {voucher.full_name?.[0]?.toUpperCase() || "V"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium">{voucher.full_name || "Anonymous"}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>Trust: {voucher.trust_score?.toFixed(1)}</span>
+                      {voucher.is_verified && (
+                        <Badge variant="secondary" className="text-xs">Verified</Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 text-muted-foreground">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                    <User className="h-5 w-5" />
+                  </div>
+                  <p className="text-sm">Not yet assigned</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Checklist */}
+        {task.checklist && task.checklist.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg">Verification Checklist</CardTitle>
+              <CardDescription>
+                Items to verify during the inspection
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                {task.checklist.map((item, index) => (
+                  <li key={item.id} className="flex items-start gap-3">
+                    <Circle className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm">{item.label}</p>
+                      {item.required && (
+                        <Badge variant="outline" className="text-xs mt-1">Required</Badge>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Actions */}
+        <Card>
+          <CardContent className="pt-6">
+            {canClaim && (
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={claimTask}
+                disabled={claiming}
+              >
+                {claiming ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Claiming...
+                  </>
+                ) : (
+                  "Claim This Task"
+                )}
+              </Button>
+            )}
+
+            {isVoucher && task.status === "assigned" && (
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={() => navigate(`/task/${task.id}/verify`)}
+              >
+                Start Verification
+              </Button>
+            )}
+
+            {isRequester && task.status === "pending_review" && (
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={() => navigate(`/task/${task.id}/review`)}
+              >
+                Review Verification
+              </Button>
+            )}
+
+            {task.status === "completed" && (
+              <div className="flex items-center justify-center gap-2 text-primary">
+                <CheckCircle2 className="h-5 w-5" />
+                <span className="font-medium">Task Completed</span>
+              </div>
+            )}
+
+            {task.status === "disputed" && (
+              <div className="flex items-center justify-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                <span className="font-medium">Task Disputed</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </main>
+      <BottomNav />
+    </div>
+  );
+}
