@@ -1,6 +1,7 @@
-import { Bell, Menu, User, LogOut } from "lucide-react";
+import { Bell, Menu, User, LogOut, Home, Search, Settings } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,15 +12,22 @@ import {
 
 export function Header() {
   const { user, userRole, signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   
   const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
   const roleLabel = userRole === 'requester' ? 'Requester' : userRole === 'voucher' ? 'Voucher' : '';
+
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center gap-3">
+        <div 
+          className="flex items-center gap-3 cursor-pointer" 
+          onClick={() => navigate("/")}
+        >
           <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary">
             <span className="text-lg font-bold text-primary-foreground">V</span>
           </div>
@@ -28,14 +36,21 @@ export function Header() {
 
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-1 md:flex">
-          <Button variant="ghost" className="text-foreground">
+          <Button 
+            variant={isActive("/") ? "secondary" : "ghost"} 
+            className="text-foreground"
+            onClick={() => navigate("/")}
+          >
+            <Home className="mr-2 h-4 w-4" />
+            Dashboard
+          </Button>
+          <Button 
+            variant={isActive("/browse") ? "secondary" : "ghost"} 
+            className="text-foreground"
+            onClick={() => navigate("/browse")}
+          >
+            <Search className="mr-2 h-4 w-4" />
             Browse
-          </Button>
-          <Button variant="ghost" className="text-foreground">
-            My Tasks
-          </Button>
-          <Button variant="ghost" className="text-foreground">
-            How it Works
           </Button>
         </nav>
 
@@ -62,6 +77,15 @@ export function Header() {
                 )}
               </div>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate("/profile")}>
+                <User className="mr-2 h-4 w-4" />
+                My Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/profile")}>
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
                 Log out
@@ -84,9 +108,18 @@ export function Header() {
                 )}
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Browse</DropdownMenuItem>
-              <DropdownMenuItem>My Tasks</DropdownMenuItem>
-              <DropdownMenuItem>How it Works</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/")}>
+                <Home className="mr-2 h-4 w-4" />
+                Dashboard
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/browse")}>
+                <Search className="mr-2 h-4 w-4" />
+                Browse
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/profile")}>
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
