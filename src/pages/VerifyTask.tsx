@@ -183,6 +183,17 @@ export default function VerifyTask() {
         throw new Error(`Task update failed: ${taskError.message}`);
       }
 
+      // Notify the requester about the verification submission
+      await supabase
+        .from("notifications")
+        .insert({
+          user_id: task.requester_id,
+          type: "verification_submitted",
+          title: "Verification Submitted",
+          message: `A voucher has submitted verification for "${task.title}"`,
+          task_id: task.id,
+        });
+
       toast({
         title: "Verification submitted!",
         description: "The requester will review your submission",

@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ReviewsList } from "@/components/review/ReviewsList";
-import { MapPin, DollarSign, Star, CheckCircle, Clock, Briefcase, TrendingUp, Eye } from "lucide-react";
+import { WalletCard } from "@/components/wallet/WalletCard";
+import { MapPin, DollarSign, Star, CheckCircle, Clock, Briefcase, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Task {
@@ -165,23 +166,8 @@ export function VoucherDashboard() {
         </Card>
       </div>
 
-      {/* Wallet Balance Card */}
-      <Card className="gradient-trust text-accent-foreground">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-accent-foreground/80">Available Balance</p>
-              <p className="text-4xl font-bold">${profile?.wallet_balance?.toFixed(2) || "0.00"}</p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="secondary" size="sm">
-                <TrendingUp className="mr-2 h-4 w-4" />
-                Withdraw
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Wallet Card */}
+      <WalletCard />
 
       {/* Mobile CTA */}
       <Button onClick={() => navigate("/browse")} className="w-full sm:hidden">

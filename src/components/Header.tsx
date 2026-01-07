@@ -1,6 +1,7 @@
-import { Bell, Menu, User, LogOut, Home, Search, Settings } from "lucide-react";
+import { Menu, User, LogOut, Home, Search, Settings, Wallet } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   DropdownMenu,
@@ -56,11 +57,18 @@ export function Header() {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
+          {/* Wallet */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => navigate("/wallet")}
+            className="hidden sm:flex"
+          >
+            <Wallet className="h-5 w-5" />
           </Button>
+
+          {/* Notifications */}
+          <NotificationBell />
 
           {/* Profile Dropdown */}
           <DropdownMenu>
@@ -115,6 +123,10 @@ export function Header() {
               <DropdownMenuItem onClick={() => navigate("/browse")}>
                 <Search className="mr-2 h-4 w-4" />
                 Browse
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/wallet")}>
+                <Wallet className="mr-2 h-4 w-4" />
+                Wallet
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/profile")}>
                 <User className="mr-2 h-4 w-4" />

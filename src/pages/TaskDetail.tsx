@@ -159,6 +159,17 @@ export default function TaskDetail() {
         variant: "destructive",
       });
     } else {
+      // Notify the requester that their task was claimed
+      await supabase
+        .from("notifications")
+        .insert({
+          user_id: task.requester_id,
+          type: "task_claimed",
+          title: "Task Claimed",
+          message: `A voucher has claimed your task "${task.title}"`,
+          task_id: task.id,
+        });
+
       toast({
         title: "Task claimed!",
         description: "You can now proceed with the verification",
