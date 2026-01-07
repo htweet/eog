@@ -216,6 +216,39 @@ export default function ReviewTask() {
             })
             .eq("id", task.voucher_id);
         }
+
+        // Create transaction record for bounty earned
+        await supabase
+          .from("transactions")
+          .insert({
+            user_id: task.voucher_id,
+            task_id: task.id,
+            type: "bounty_earned",
+            amount: task.bounty_amount,
+            status: "completed",
+            description: `Bounty earned for task: ${task.title}`,
+          });
+
+        // Create notifications for voucher
+        await supabase
+          .from("notifications")
+          .insert({
+            user_id: task.voucher_id,
+            type: "payment_received",
+            title: "Payment Received!",
+            message: `You earned $${task.bounty_amount} for completing "${task.title}"`,
+            task_id: task.id,
+          });
+
+        await supabase
+          .from("notifications")
+          .insert({
+            user_id: task.voucher_id,
+            type: "review_received",
+            title: "New Review",
+            message: `You received a ${rating}-star review`,
+            task_id: task.id,
+          });
       }
 
       toast({
@@ -261,6 +294,19 @@ export default function ReviewTask() {
         });
 
       if (reviewError) throw reviewError;
+
+      // Notify the voucher about the dispute
+      if (task.voucher_id) {
+        await supabase
+          .from("notifications")
+          .insert({
+            user_id: task.voucher_id,
+            type: "task_disputed",
+            title: "Task Disputed",
+            message: `Your verification for "${task.title}" has been disputed`,
+            task_id: task.id,
+          });
+      }
 
       toast({
         title: "Task disputed",

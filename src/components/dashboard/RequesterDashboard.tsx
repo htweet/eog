@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { WalletCard } from "@/components/wallet/WalletCard";
 import { Plus, Clock, CheckCircle, AlertCircle, DollarSign, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -158,6 +159,9 @@ export function RequesterDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Wallet Card */}
+      <WalletCard />
 
       {/* Mobile CTA */}
       <Button onClick={() => navigate("/create-task")} className="w-full sm:hidden">
