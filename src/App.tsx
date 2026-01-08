@@ -15,6 +15,7 @@ import TaskDetail from "./pages/TaskDetail";
 import VerifyTask from "./pages/VerifyTask";
 import ReviewTask from "./pages/ReviewTask";
 import Wallet from "./pages/Wallet";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -90,6 +91,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Wallet />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <Admin />
                 </ProtectedRoute>
               } 
             />

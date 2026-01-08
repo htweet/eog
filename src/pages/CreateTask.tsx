@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useWallet } from "@/hooks/useWallet";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { LocationPicker } from "@/components/task/LocationPicker";
@@ -11,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
@@ -19,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, DollarSign, ArrowLeft, ClipboardList } from "lucide-react";
+import { Loader2, DollarSign, ArrowLeft, ClipboardList, AlertCircle, Wallet } from "lucide-react";
 
 const categories = [
   { value: "auto", label: "Automobiles", icon: "🚗" },
@@ -32,6 +34,7 @@ export default function CreateTask() {
   const { user, userRole } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { balance, holdEscrow, loading: walletLoading } = useWallet();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -42,6 +45,9 @@ export default function CreateTask() {
   const [longitude, setLongitude] = useState<number | null>(null);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const parsedBounty = parseFloat(bountyAmount) || 0;
+  const hasInsufficientBalance = parsedBounty > balance;
 
   const handleCoordinatesChange = (lat: number, lng: number) => {
     setLatitude(lat);
@@ -87,16 +93,28 @@ export default function CreateTask() {
       return;
     }
 
+    // Check wallet balance for escrow
+    const bounty = parseFloat(bountyAmount);
+    if (bounty > balance) {
+      toast({
+        title: "Insufficient balance",
+        description: `You need $${bounty.toFixed(2)} in your wallet. Current balance: $${balance.toFixed(2)}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
+    // First create the task
     const { data, error } = await supabase.from("tasks").insert([{
       title,
       category,
-      bounty_amount: parseFloat(bountyAmount),
+      bounty_amount: bounty,
       address,
       latitude,
       longitude,
-      checklist: checklist as unknown as undefined, // Cast to bypass strict typing
+      checklist: checklist as unknown as undefined,
       requester_id: user.id,
       status: "open",
     }]).select().single();
@@ -108,13 +126,29 @@ export default function CreateTask() {
         description: error.message || "Failed to create task",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Task created!",
-        description: "Your verification task is now live",
-      });
-      navigate(`/task/${data.id}`);
+      setIsSubmitting(false);
+      return;
     }
+
+    // Hold escrow for the bounty amount
+    const escrowResult = await holdEscrow(data.id, bounty);
+    if (!escrowResult.success) {
+      // Rollback - delete the task if escrow fails
+      await supabase.from("tasks").delete().eq("id", data.id);
+      toast({
+        title: "Error",
+        description: escrowResult.error || "Failed to hold escrow",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    toast({
+      title: "Task created!",
+      description: `$${bounty.toFixed(2)} held in escrow until verification is complete`,
+    });
+    navigate(`/task/${data.id}`);
 
     setIsSubmitting(false);
   };
@@ -202,13 +236,30 @@ export default function CreateTask() {
                     placeholder="25.00"
                     value={bountyAmount}
                     onChange={(e) => setBountyAmount(e.target.value)}
-                    className="pl-10"
+                    className={`pl-10 ${hasInsufficientBalance ? 'border-destructive' : ''}`}
                     required
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  This amount will be held in escrow until verification is complete
-                </p>
+                <div className="flex items-center justify-between text-xs">
+                  <p className="text-muted-foreground">
+                    This amount will be held in escrow until verification is complete
+                  </p>
+                  <p className="flex items-center gap-1">
+                    <Wallet className="h-3 w-3" />
+                    Balance: ${balance.toFixed(2)}
+                  </p>
+                </div>
+                {hasInsufficientBalance && (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Insufficient balance. You need ${parsedBounty.toFixed(2)} but only have ${balance.toFixed(2)}.
+                      <Button variant="link" className="p-0 h-auto ml-1" onClick={() => navigate('/wallet')}>
+                        Add funds
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
 
               {/* Location Picker */}
@@ -234,7 +285,7 @@ export default function CreateTask() {
                 type="submit"
                 className="w-full"
                 size="lg"
-                disabled={isSubmitting || !title || !category || !bountyAmount || !address || checklist.length === 0}
+                disabled={isSubmitting || !title || !category || !bountyAmount || !address || checklist.length === 0 || hasInsufficientBalance || walletLoading}
               >
                 {isSubmitting ? (
                   <>
