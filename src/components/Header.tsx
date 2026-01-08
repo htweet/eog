@@ -1,4 +1,4 @@
-import { Menu, User, LogOut, Home, Search, Settings, Wallet } from "lucide-react";
+import { Menu, User, LogOut, Home, Search, Settings, Wallet, Shield } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -93,6 +93,12 @@ export function Header() {
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </DropdownMenuItem>
+              {userRole === 'admin' && (
+                <DropdownMenuItem onClick={() => navigate("/admin")}>
+                  <Shield className="mr-2 h-4 w-4" />
+                  Admin Panel
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
@@ -132,6 +138,12 @@ export function Header() {
                 <User className="mr-2 h-4 w-4" />
                 Profile
               </DropdownMenuItem>
+              {userRole === 'admin' && (
+                <DropdownMenuItem onClick={() => navigate("/admin")}>
+                  <Shield className="mr-2 h-4 w-4" />
+                  Admin Panel
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
