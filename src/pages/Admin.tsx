@@ -16,6 +16,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Slider } from "@/components/ui/slider";
+import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
+import { VoucherVerification } from "@/components/admin/VoucherVerification";
+import { AIVideoAnalysis } from "@/components/admin/AIVideoAnalysis";
+import { LiveStreamingPanel } from "@/components/admin/LiveStreamingPanel";
 import {
   Shield,
   Users,
@@ -30,6 +34,9 @@ import {
   TrendingUp,
   Activity,
   BarChart3,
+  Brain,
+  Video,
+  IdCard,
 } from "lucide-react";
 
 export default function Admin() {
@@ -80,7 +87,7 @@ export default function Admin() {
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; className: string }> = {
       open: { variant: "secondary", className: "bg-green-500/10 text-green-500" },
-      in_progress: { variant: "secondary", className: "bg-blue-500/10 text-blue-500" },
+      assigned: { variant: "secondary", className: "bg-blue-500/10 text-blue-500" },
       pending_review: { variant: "secondary", className: "bg-amber-500/10 text-amber-500" },
       completed: { variant: "secondary", className: "bg-green-600/10 text-green-600" },
       disputed: { variant: "destructive", className: "bg-red-500/10 text-red-500" },
@@ -164,14 +171,30 @@ export default function Admin() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="disputes" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+        <Tabs defaultValue="analytics" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="analytics" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Analytics</span>
+            </TabsTrigger>
             <TabsTrigger value="disputes" className="gap-2">
               <AlertTriangle className="h-4 w-4" />
               <span className="hidden sm:inline">Disputes</span>
               {stats.pendingDisputes > 0 && (
                 <Badge variant="destructive" className="ml-1">{stats.pendingDisputes}</Badge>
               )}
+            </TabsTrigger>
+            <TabsTrigger value="ai-analysis" className="gap-2">
+              <Brain className="h-4 w-4" />
+              <span className="hidden sm:inline">AI Analysis</span>
+            </TabsTrigger>
+            <TabsTrigger value="streaming" className="gap-2">
+              <Video className="h-4 w-4" />
+              <span className="hidden sm:inline">Streaming</span>
+            </TabsTrigger>
+            <TabsTrigger value="verification" className="gap-2">
+              <IdCard className="h-4 w-4" />
+              <span className="hidden sm:inline">Verify</span>
             </TabsTrigger>
             <TabsTrigger value="tasks" className="gap-2">
               <ClipboardList className="h-4 w-4" />
@@ -187,7 +210,27 @@ export default function Admin() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Disputes Tab */}
+          {/* Analytics Tab (Phase 8.5) */}
+          <TabsContent value="analytics">
+            <AnalyticsDashboard />
+          </TabsContent>
+
+          {/* AI Video Analysis Tab (Phase 8.1) */}
+          <TabsContent value="ai-analysis">
+            <AIVideoAnalysis />
+          </TabsContent>
+
+          {/* Live Streaming Tab (Phase 8.2) */}
+          <TabsContent value="streaming">
+            <LiveStreamingPanel />
+          </TabsContent>
+
+          {/* Voucher Verification Tab (Phase 8.4) */}
+          <TabsContent value="verification">
+            <VoucherVerification />
+          </TabsContent>
+
+          {/* Disputes Tab (Phase 8.3) */}
           <TabsContent value="disputes">
             <Card>
               <CardHeader>
@@ -224,7 +267,7 @@ export default function Admin() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="text-green-600 border-green-600 hover:bg-green-50"
+                                  className="text-green-600 border-green-600 hover:bg-green-50 dark:hover:bg-green-950"
                                   onClick={() => resolveDispute(dispute.id, 'approve')}
                                 >
                                   <CheckCircle className="h-4 w-4 mr-1" />
@@ -233,7 +276,7 @@ export default function Admin() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="text-red-600 border-red-600 hover:bg-red-50"
+                                  className="text-red-600 border-red-600 hover:bg-red-50 dark:hover:bg-red-950"
                                   onClick={() => resolveDispute(dispute.id, 'reject')}
                                 >
                                   <XCircle className="h-4 w-4 mr-1" />
@@ -487,53 +530,6 @@ export default function Admin() {
                       checked={settings.autoApproveVerified}
                       onCheckedChange={(checked) => updateSettings({ autoApproveVerified: checked })}
                     />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="md:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    Platform Analytics
-                  </CardTitle>
-                  <CardDescription>Overview of platform performance</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <div className="p-4 rounded-lg border">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                        <Activity className="h-4 w-4" />
-                        Completion Rate
-                      </div>
-                      <div className="text-2xl font-bold">
-                        {stats.totalTasks > 0
-                          ? ((tasks.filter((t) => t.status === "completed").length / stats.totalTasks) * 100).toFixed(1)
-                          : 0}%
-                      </div>
-                    </div>
-                    <div className="p-4 rounded-lg border">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                        <TrendingUp className="h-4 w-4" />
-                        Avg. Bounty
-                      </div>
-                      <div className="text-2xl font-bold">
-                        ${stats.totalTasks > 0
-                          ? (tasks.reduce((sum, t) => sum + t.bounty_amount, 0) / stats.totalTasks).toFixed(2)
-                          : "0.00"}
-                      </div>
-                    </div>
-                    <div className="p-4 rounded-lg border">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                        <AlertTriangle className="h-4 w-4" />
-                        Dispute Rate
-                      </div>
-                      <div className="text-2xl font-bold">
-                        {stats.totalTasks > 0
-                          ? ((stats.pendingDisputes / stats.totalTasks) * 100).toFixed(1)
-                          : 0}%
-                      </div>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
