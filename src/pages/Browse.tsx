@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { BountyCard } from "@/components/BountyCard";
-import { TaskMapView } from "@/components/task/TaskMapView";
+import { InteractiveMapView } from "@/components/map/InteractiveMapView";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -296,7 +296,7 @@ export default function Browse() {
             <p className="text-muted-foreground">Try adjusting your filters</p>
           </div>
         ) : viewMode === "map" ? (
-          <TaskMapView tasks={filteredTasks} userLocation={userLocation} />
+          <InteractiveMapView tasks={filteredTasks} userLocation={userLocation} />
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
             {filteredTasks.map((task, index) => (
