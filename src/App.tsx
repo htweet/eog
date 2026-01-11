@@ -17,6 +17,10 @@ import ReviewTask from "./pages/ReviewTask";
 import Wallet from "./pages/Wallet";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import Checkout from "./pages/Checkout";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import Settings from "./pages/Settings";
+import VoucherDashboardPage from "./pages/VoucherDashboardPage";
 
 const queryClient = new QueryClient();
 
@@ -99,6 +103,38 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Admin />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/checkout" 
+              element={
+                <ProtectedRoute>
+                  <Checkout />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/payment-success" 
+              element={
+                <ProtectedRoute>
+                  <PaymentSuccess />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/voucher-dashboard" 
+              element={
+                <ProtectedRoute>
+                  <VoucherDashboardPage />
                 </ProtectedRoute>
               } 
             />

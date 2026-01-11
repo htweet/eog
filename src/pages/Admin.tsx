@@ -20,6 +20,7 @@ import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 import { VoucherVerification } from "@/components/admin/VoucherVerification";
 import { AIVideoAnalysis } from "@/components/admin/AIVideoAnalysis";
 import { LiveStreamingPanel } from "@/components/admin/LiveStreamingPanel";
+import { AdminManagement } from "@/components/admin/AdminManagement";
 import {
   Shield,
   Users,
@@ -37,6 +38,7 @@ import {
   Brain,
   Video,
   IdCard,
+  Sliders,
 } from "lucide-react";
 
 export default function Admin() {
@@ -172,10 +174,14 @@ export default function Admin() {
 
         {/* Tabs */}
         <Tabs defaultValue="analytics" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-9 lg:w-auto lg:inline-grid">
             <TabsTrigger value="analytics" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger value="management" className="gap-2">
+              <Sliders className="h-4 w-4" />
+              <span className="hidden sm:inline">Manage</span>
             </TabsTrigger>
             <TabsTrigger value="disputes" className="gap-2">
               <AlertTriangle className="h-4 w-4" />
@@ -213,6 +219,11 @@ export default function Admin() {
           {/* Analytics Tab (Phase 8.5) */}
           <TabsContent value="analytics">
             <AnalyticsDashboard />
+          </TabsContent>
+
+          {/* Admin Management Tab */}
+          <TabsContent value="management">
+            <AdminManagement />
           </TabsContent>
 
           {/* AI Video Analysis Tab (Phase 8.1) */}
