@@ -1,1 +1,16 @@
 project_id = "jiemgpawjuranlfvmpad"
+
+[functions.generate-checklist]
+verify_jwt = false
+
+[functions.send-notification-email]
+verify_jwt = false
+
+[functions.process-payment]
+verify_jwt = false
+
+[functions.analyze-video]
+verify_jwt = false
+
+[functions.send-push-notification]
+verify_jwt = false
