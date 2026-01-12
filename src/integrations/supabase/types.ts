@@ -14,54 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      live_streams: {
-        Row: {
-          ended_at: string | null
-          id: string
-          recording_url: string | null
-          started_at: string | null
-          status: string
-          task_id: string
-          viewer_count: number | null
-          voucher_id: string
-        }
-        Insert: {
-          ended_at?: string | null
-          id?: string
-          recording_url?: string | null
-          started_at?: string | null
-          status?: string
-          task_id: string
-          viewer_count?: number | null
-          voucher_id: string
-        }
-        Update: {
-          ended_at?: string | null
-          id?: string
-          recording_url?: string | null
-          started_at?: string | null
-          status?: string
-          task_id?: string
-          viewer_count?: number | null
-          voucher_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "live_streams_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "tasks"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "live_streams_voucher_id_fkey"
-            columns: ["voucher_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       notifications: {
         Row: {
           created_at: string
@@ -110,63 +62,6 @@ export type Database = {
           },
         ]
       }
-      payout_requests: {
-        Row: {
-          account_name: string | null
-          account_number: string | null
-          admin_notes: string | null
-          amount: number
-          bank_name: string | null
-          created_at: string | null
-          id: string
-          processed_at: string | null
-          processed_by: string | null
-          status: string
-          user_id: string
-        }
-        Insert: {
-          account_name?: string | null
-          account_number?: string | null
-          admin_notes?: string | null
-          amount: number
-          bank_name?: string | null
-          created_at?: string | null
-          id?: string
-          processed_at?: string | null
-          processed_by?: string | null
-          status?: string
-          user_id: string
-        }
-        Update: {
-          account_name?: string | null
-          account_number?: string | null
-          admin_notes?: string | null
-          amount?: number
-          bank_name?: string | null
-          created_at?: string | null
-          id?: string
-          processed_at?: string | null
-          processed_by?: string | null
-          status?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "payout_requests_processed_by_fkey"
-            columns: ["processed_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payout_requests_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -177,7 +72,6 @@ export type Database = {
           is_verified: boolean | null
           trust_score: number | null
           wallet_balance: number | null
-          withdrawable_balance: number | null
         }
         Insert: {
           avatar_url?: string | null
@@ -188,7 +82,6 @@ export type Database = {
           is_verified?: boolean | null
           trust_score?: number | null
           wallet_balance?: number | null
-          withdrawable_balance?: number | null
         }
         Update: {
           avatar_url?: string | null
@@ -199,7 +92,6 @@ export type Database = {
           is_verified?: boolean | null
           trust_score?: number | null
           wallet_balance?: number | null
-          withdrawable_balance?: number | null
         }
         Relationships: []
       }
