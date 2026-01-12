@@ -6,7 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { NotificationProvider } from "@/components/notifications/NotificationProvider";
-import Index from "./pages/Index";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Browse from "./pages/Browse";
@@ -21,6 +22,7 @@ import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Settings from "./pages/Settings";
 import VoucherDashboardPage from "./pages/VoucherDashboardPage";
+import RequesterDashboardPage from "./pages/RequesterDashboardPage";
 
 const queryClient = new QueryClient();
 
@@ -32,13 +34,30 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <NotificationProvider>
+          <InstallPrompt />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route 
               path="/" 
               element={
                 <ProtectedRoute>
-                  <Index />
+                  <Home />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/voucher" 
+              element={
+                <ProtectedRoute>
+                  <VoucherDashboardPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/requester" 
+              element={
+                <ProtectedRoute>
+                  <RequesterDashboardPage />
                 </ProtectedRoute>
               } 
             />
