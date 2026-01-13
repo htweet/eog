@@ -21,6 +21,8 @@ import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Settings from "./pages/Settings";
 import VoucherDashboardPage from "./pages/VoucherDashboardPage";
+import RequesterDashboardPage from "./pages/RequesterDashboardPage";
+import Install from "./pages/Install";
 
 const queryClient = new QueryClient();
 
@@ -138,6 +140,23 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/dashboard/voucher" 
+              element={
+                <ProtectedRoute>
+                  <VoucherDashboardPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/requester" 
+              element={
+                <ProtectedRoute>
+                  <RequesterDashboardPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/install" element={<Install />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

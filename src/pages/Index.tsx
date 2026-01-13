@@ -7,6 +7,7 @@ import { HowItWorksSection } from "@/components/HowItWorksSection";
 import { BottomNav } from "@/components/BottomNav";
 import { RequesterDashboard } from "@/components/dashboard/RequesterDashboard";
 import { VoucherDashboard } from "@/components/dashboard/VoucherDashboard";
+import { RecentVerifications } from "@/components/home/RecentVerifications";
 
 const Index = () => {
   const { userRole } = useAuth();
@@ -42,6 +43,7 @@ const Index = () => {
       <Header />
       <main>
         <HeroSection />
+        <RecentVerifications />
         <CategoriesSection />
         <ActiveBountiesSection />
         <HowItWorksSection />
