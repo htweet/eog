@@ -7,9 +7,11 @@ import { BottomNav } from "@/components/BottomNav";
 import { VideoRecorder } from "@/components/verification/VideoRecorder";
 import { ChecklistProgress } from "@/components/verification/ChecklistProgress";
 import { VerificationSummary } from "@/components/verification/VerificationSummary";
+import { WebRTCStream } from "@/components/streaming/WebRTCStream";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft,
@@ -19,6 +21,7 @@ import {
   Loader2,
   MapPin,
   DollarSign,
+  Radio,
 } from "lucide-react";
 
 interface Task {
@@ -63,6 +66,8 @@ export default function VerifyTask() {
   const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
   const [gpsData, setGpsData] = useState<GPSData | null>(null);
   const [completedItems, setCompletedItems] = useState<CompletedItem[]>([]);
+  const [showLiveStream, setShowLiveStream] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -268,6 +273,34 @@ export default function VerifyTask() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Go Live Button */}
+        <Dialog open={showLiveStream} onOpenChange={setShowLiveStream}>
+          <DialogTrigger asChild>
+            <Button 
+              variant={isStreaming ? "destructive" : "default"}
+              className={`w-full mb-6 gap-2 ${!isStreaming ? 'bg-red-600 hover:bg-red-700' : ''}`}
+              size="lg"
+            >
+              <Radio className={`h-5 w-5 ${isStreaming ? 'animate-pulse' : ''}`} />
+              {isStreaming ? "Live Streaming..." : "Go Live for Requester"}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Live Stream to Requester</DialogTitle>
+            </DialogHeader>
+            <WebRTCStream
+              taskId={task.id}
+              taskTitle={task.title}
+              mode="broadcast"
+              onStreamEnd={() => {
+                setShowLiveStream(false);
+                setIsStreaming(false);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
 
         {/* Verification steps */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>

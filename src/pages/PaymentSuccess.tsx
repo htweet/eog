@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Home, Wallet, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, Home, Wallet, Loader2, ShieldCheck, ShieldX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -13,21 +13,71 @@ export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [processing, setProcessing] = useState(true);
-  const [success, setSuccess] = useState(false);
+  const [verifying, setVerifying] = useState(true);
+  const [processing, setProcessing] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
 
   const status = searchParams.get("status");
   const tx_ref = searchParams.get("tx_ref");
   const transaction_id = searchParams.get("transaction_id");
 
   useEffect(() => {
-    const processPayment = async () => {
+    const verifyAndProcessPayment = async () => {
+      // If status is not successful, skip verification
+      if (status !== "successful") {
+        setVerifying(false);
+        if (status === "cancelled") {
+          toast.error("Payment was cancelled");
+        } else if (status === "failed") {
+          toast.error("Payment failed. Please try again.");
+        }
+        return;
+      }
+
+      // Need transaction_id for verification
+      if (!transaction_id) {
+        setVerifying(false);
+        setVerificationError("Missing transaction ID for verification");
+        return;
+      }
+
       const pendingAmount = localStorage.getItem('pending_amount');
       const pendingTxRef = localStorage.getItem('pending_tx_ref');
 
-      if (status === "successful" && user && pendingAmount) {
-        try {
-          // Update user's wallet balance
+      try {
+        // Step 1: Verify payment with edge function
+        console.log("Verifying payment with transaction_id:", transaction_id);
+        
+        const { data: verifyResult, error: verifyError } = await supabase.functions.invoke('verify-payment', {
+          body: { 
+            transaction_id,
+            expected_amount: pendingAmount ? parseFloat(pendingAmount) : undefined,
+            expected_currency: "NGN"
+          }
+        });
+
+        if (verifyError) {
+          console.error("Verification error:", verifyError);
+          setVerificationError("Failed to verify payment. Please contact support.");
+          setVerifying(false);
+          return;
+        }
+
+        if (!verifyResult?.success) {
+          console.error("Payment verification failed:", verifyResult);
+          setVerificationError(verifyResult?.error || "Payment verification failed");
+          setVerifying(false);
+          return;
+        }
+
+        console.log("Payment verified successfully:", verifyResult);
+        setVerified(true);
+        setVerifying(false);
+        setProcessing(true);
+
+        // Step 2: Update wallet balance if user is logged in
+        if (user && pendingAmount) {
           const { data: profile } = await supabase
             .from('profiles')
             .select('wallet_balance')
@@ -35,7 +85,8 @@ export default function PaymentSuccess() {
             .single();
 
           const currentBalance = profile?.wallet_balance || 0;
-          const newBalance = currentBalance + parseFloat(pendingAmount);
+          const verifiedAmount = verifyResult.data?.amount || parseFloat(pendingAmount);
+          const newBalance = currentBalance + verifiedAmount;
 
           await supabase
             .from('profiles')
@@ -46,7 +97,7 @@ export default function PaymentSuccess() {
           await supabase.from('transactions').insert({
             user_id: user.id,
             type: 'deposit',
-            amount: parseFloat(pendingAmount),
+            amount: verifiedAmount,
             status: 'completed',
             description: `Flutterwave deposit - ${tx_ref || pendingTxRef}`
           });
@@ -55,25 +106,21 @@ export default function PaymentSuccess() {
           localStorage.removeItem('pending_amount');
           localStorage.removeItem('pending_tx_ref');
 
-          setSuccess(true);
-          toast.success("Payment successful! Funds added to your wallet.");
-        } catch (error) {
-          console.error("Error processing payment:", error);
-          toast.error("Payment received but failed to update wallet. Please contact support.");
+          toast.success("Payment verified! Funds added to your wallet.");
         }
-      } else if (status === "cancelled") {
-        toast.error("Payment was cancelled");
-      } else if (status === "failed") {
-        toast.error("Payment failed. Please try again.");
+      } catch (error) {
+        console.error("Error processing payment:", error);
+        setVerificationError("An error occurred during verification. Please contact support.");
+      } finally {
+        setProcessing(false);
       }
-
-      setProcessing(false);
     };
 
-    processPayment();
-  }, [status, user, tx_ref]);
+    verifyAndProcessPayment();
+  }, [status, user, tx_ref, transaction_id]);
 
-  const isSuccessful = status === "successful" && success;
+  const isVerified = verified && status === "successful";
+  const isLoading = verifying || processing;
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
@@ -82,21 +129,33 @@ export default function PaymentSuccess() {
         <div className="max-w-lg mx-auto">
           <Card>
             <CardHeader className="text-center">
-              {processing ? (
+              {isLoading ? (
                 <div className="flex flex-col items-center gap-4">
                   <Loader2 className="w-16 h-16 text-primary animate-spin" />
-                  <CardTitle>Processing Payment...</CardTitle>
-                  <CardDescription>Please wait while we confirm your payment</CardDescription>
+                  <CardTitle>{verifying ? "Verifying Payment..." : "Processing..."}</CardTitle>
+                  <CardDescription>
+                    {verifying 
+                      ? "Securely verifying your payment with Flutterwave" 
+                      : "Updating your wallet balance"}
+                  </CardDescription>
                 </div>
-              ) : isSuccessful ? (
+              ) : isVerified ? (
                 <div className="flex flex-col items-center gap-4">
                   <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
-                    <CheckCircle2 className="w-12 h-12 text-green-600" />
+                    <ShieldCheck className="w-12 h-12 text-green-600" />
                   </div>
-                  <CardTitle className="text-green-600">Payment Successful!</CardTitle>
+                  <CardTitle className="text-green-600">Payment Verified!</CardTitle>
                   <CardDescription>
-                    Your funds have been added to your wallet
+                    Your payment has been securely verified and funds added to your wallet
                   </CardDescription>
+                </div>
+              ) : verificationError ? (
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-20 h-20 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+                    <ShieldX className="w-12 h-12 text-red-600" />
+                  </div>
+                  <CardTitle className="text-red-600">Verification Failed</CardTitle>
+                  <CardDescription>{verificationError}</CardDescription>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-4">
@@ -113,18 +172,18 @@ export default function PaymentSuccess() {
               )}
             </CardHeader>
             <CardContent className="space-y-4">
-              {!processing && (
+              {!isLoading && (
                 <>
-                  {tx_ref && (
-                    <div className="bg-muted p-4 rounded-lg">
-                      <p className="text-sm text-muted-foreground">Transaction Reference</p>
-                      <p className="font-mono text-sm">{tx_ref}</p>
-                    </div>
-                  )}
                   {transaction_id && (
                     <div className="bg-muted p-4 rounded-lg">
                       <p className="text-sm text-muted-foreground">Transaction ID</p>
                       <p className="font-mono text-sm">{transaction_id}</p>
+                    </div>
+                  )}
+                  {tx_ref && (
+                    <div className="bg-muted p-4 rounded-lg">
+                      <p className="text-sm text-muted-foreground">Transaction Reference</p>
+                      <p className="font-mono text-sm">{tx_ref}</p>
                     </div>
                   )}
 
@@ -132,7 +191,7 @@ export default function PaymentSuccess() {
                     <Button 
                       onClick={() => navigate("/wallet")} 
                       className="flex-1"
-                      variant={isSuccessful ? "default" : "outline"}
+                      variant={isVerified ? "default" : "outline"}
                     >
                       <Wallet className="mr-2 h-4 w-4" />
                       Go to Wallet
@@ -147,7 +206,7 @@ export default function PaymentSuccess() {
                     </Button>
                   </div>
 
-                  {!isSuccessful && (
+                  {!isVerified && (
                     <Button 
                       onClick={() => navigate("/checkout")} 
                       className="w-full"
