@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { TaskCompletionBanner } from "@/components/task/TaskCompletionBanner";
 import { ReviewsList } from "@/components/review/ReviewsList";
+import { WebRTCStream } from "@/components/streaming/WebRTCStream";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft,
@@ -26,6 +28,7 @@ import {
   Package,
   Navigation,
   Star,
+  Radio,
 } from "lucide-react";
 
 interface Task {
@@ -84,11 +87,57 @@ export default function TaskDetail() {
   const [voucher, setVoucher] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
+  const [liveStream, setLiveStream] = useState<{ id: string } | null>(null);
+  const [showLiveStream, setShowLiveStream] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchTask();
+      checkLiveStream();
     }
+  }, [id]);
+
+  const checkLiveStream = async () => {
+    if (!id) return;
+    
+    const { data } = await supabase
+      .from("live_streams")
+      .select("id")
+      .eq("task_id", id)
+      .eq("status", "live")
+      .maybeSingle();
+    
+    setLiveStream(data);
+  };
+
+  // Subscribe to live stream updates
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel(`task-stream-${id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "live_streams",
+          filter: `task_id=eq.${id}`,
+        },
+        (payload) => {
+          if (payload.eventType === "INSERT" || (payload.eventType === "UPDATE" && payload.new.status === "live")) {
+            setLiveStream({ id: payload.new.id as string });
+          } else if (payload.eventType === "UPDATE" && payload.new.status === "ended") {
+            setLiveStream(null);
+            setShowLiveStream(false);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [id]);
 
   const fetchTask = async () => {
@@ -355,6 +404,42 @@ export default function TaskDetail() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Watch Live Button for Requesters */}
+        {isRequester && task.status === "assigned" && liveStream && (
+          <Dialog open={showLiveStream} onOpenChange={setShowLiveStream}>
+            <DialogTrigger asChild>
+              <Button 
+                variant="default" 
+                className="w-full mb-6 gap-2 bg-red-600 hover:bg-red-700"
+                size="lg"
+              >
+                <Radio className="h-5 w-5 animate-pulse" />
+                Watch Live Stream
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Live Verification Stream</DialogTitle>
+              </DialogHeader>
+              <WebRTCStream
+                taskId={task.id}
+                taskTitle={task.title}
+                mode="watch"
+              />
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Live Stream Available Indicator */}
+        {isRequester && task.status === "assigned" && !liveStream && (
+          <Card className="mb-6 border-dashed">
+            <CardContent className="flex items-center justify-center py-6 text-muted-foreground">
+              <Radio className="h-5 w-5 mr-2" />
+              <span>Waiting for voucher to start live stream...</span>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Checklist */}
         {task.checklist && task.checklist.length > 0 && (
