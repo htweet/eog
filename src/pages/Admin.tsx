@@ -21,6 +21,7 @@ import { VoucherVerification } from "@/components/admin/VoucherVerification";
 import { AIVideoAnalysis } from "@/components/admin/AIVideoAnalysis";
 import { LiveStreamingPanel } from "@/components/admin/LiveStreamingPanel";
 import { AdminManagement } from "@/components/admin/AdminManagement";
+import { PayoutManagement } from "@/components/admin/PayoutManagement";
 import {
   Shield,
   Users,
@@ -39,6 +40,7 @@ import {
   Video,
   IdCard,
   Sliders,
+  Banknote,
 } from "lucide-react";
 
 export default function Admin() {
@@ -174,7 +176,7 @@ export default function Admin() {
 
         {/* Tabs */}
         <Tabs defaultValue="analytics" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-9 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10 lg:w-auto lg:inline-grid">
             <TabsTrigger value="analytics" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Analytics</span>
@@ -182,6 +184,10 @@ export default function Admin() {
             <TabsTrigger value="management" className="gap-2">
               <Sliders className="h-4 w-4" />
               <span className="hidden sm:inline">Manage</span>
+            </TabsTrigger>
+            <TabsTrigger value="payouts" className="gap-2">
+              <Banknote className="h-4 w-4" />
+              <span className="hidden sm:inline">Payouts</span>
             </TabsTrigger>
             <TabsTrigger value="disputes" className="gap-2">
               <AlertTriangle className="h-4 w-4" />
@@ -224,6 +230,11 @@ export default function Admin() {
           {/* Admin Management Tab */}
           <TabsContent value="management">
             <AdminManagement />
+          </TabsContent>
+
+          {/* Payouts Tab */}
+          <TabsContent value="payouts">
+            <PayoutManagement />
           </TabsContent>
 
           {/* AI Video Analysis Tab (Phase 8.1) */}
