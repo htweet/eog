@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Header() {
-  const { user, userRole, signOut } = useAuth();
+  const { user, userRole, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -93,7 +93,7 @@ export function Header() {
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </DropdownMenuItem>
-              {userRole === 'admin' && (
+              {isAdmin && (
                 <DropdownMenuItem onClick={() => navigate("/admin")}>
                   <Shield className="mr-2 h-4 w-4" />
                   Admin Panel
@@ -138,7 +138,7 @@ export function Header() {
                 <User className="mr-2 h-4 w-4" />
                 Profile
               </DropdownMenuItem>
-              {userRole === 'admin' && (
+              {isAdmin && (
                 <DropdownMenuItem onClick={() => navigate("/admin")}>
                   <Shield className="mr-2 h-4 w-4" />
                   Admin Panel
