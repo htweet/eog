@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ReviewsList } from "@/components/review/ReviewsList";
 import { WalletCard } from "@/components/wallet/WalletCard";
+import { WithdrawalCard } from "@/components/wallet/WithdrawalCard";
 import { MapPin, DollarSign, Star, CheckCircle, Clock, Briefcase, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -168,6 +169,9 @@ export function VoucherDashboard() {
 
       {/* Wallet Card */}
       <WalletCard />
+      
+      {/* Withdrawal Card */}
+      <WithdrawalCard />
 
       {/* Mobile CTA */}
       <Button onClick={() => navigate("/browse")} className="w-full sm:hidden">

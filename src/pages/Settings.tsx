@@ -12,10 +12,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User, Bell, Shield, Palette, Save, Loader2, Camera } from "lucide-react";
+import { User, Bell, Shield, Palette, Save, Loader2, Camera, Wallet, RefreshCw } from "lucide-react";
+import { RoleSwitcher } from "@/components/settings/RoleSwitcher";
+import { WithdrawalSettings } from "@/components/settings/WithdrawalSettings";
 
 export default function Settings() {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState({
@@ -202,6 +204,25 @@ export default function Settings() {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Role Switcher */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <RefreshCw className="w-5 h-5" />
+                Role Management
+              </CardTitle>
+              <CardDescription>Switch between roles or add new ones</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RoleSwitcher />
+            </CardContent>
+          </Card>
+
+          {/* Withdrawal Settings - Only for vouchers */}
+          {(userRole === "voucher" || userRole === "requester") && (
+            <WithdrawalSettings />
+          )}
 
           {/* Notification Settings */}
           <Card>
