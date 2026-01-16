@@ -2,8 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { NotificationProvider } from "@/components/notifications/NotificationProvider";
 import Index from "./pages/Index";
@@ -23,8 +23,40 @@ import Settings from "./pages/Settings";
 import VoucherDashboardPage from "./pages/VoucherDashboardPage";
 import RequesterDashboardPage from "./pages/RequesterDashboardPage";
 import Install from "./pages/Install";
+import Landing from "./pages/Landing";
+import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
+
+// Root route component that handles landing vs authenticated redirect
+function RootRoute() {
+  const { user, loading, userRole, isAdmin } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Not authenticated - show landing page
+  if (!user) {
+    return <Landing />;
+  }
+
+  // Authenticated - redirect to appropriate dashboard
+  if (isAdmin) {
+    return <Navigate to="/admin" replace />;
+  } else if (userRole === "voucher") {
+    return <Navigate to="/dashboard/voucher" replace />;
+  } else if (userRole === "requester") {
+    return <Navigate to="/dashboard/requester" replace />;
+  }
+  
+  // Default fallback to Index
+  return <Index />;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -36,8 +68,9 @@ const App = () => (
           <NotificationProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/" element={<RootRoute />} />
             <Route 
-              path="/" 
+              path="/home" 
               element={
                 <ProtectedRoute>
                   <Index />
@@ -63,7 +96,7 @@ const App = () => (
             <Route 
               path="/create-task" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="requester">
                   <CreateTask />
                 </ProtectedRoute>
               } 
@@ -79,7 +112,7 @@ const App = () => (
             <Route 
               path="/task/:id/verify" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="voucher">
                   <VerifyTask />
                 </ProtectedRoute>
               } 
@@ -87,7 +120,7 @@ const App = () => (
             <Route 
               path="/task/:id/review" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="requester">
                   <ReviewTask />
                 </ProtectedRoute>
               } 
@@ -103,7 +136,7 @@ const App = () => (
             <Route 
               path="/admin" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="admin">
                   <Admin />
                 </ProtectedRoute>
               } 
@@ -135,7 +168,7 @@ const App = () => (
             <Route 
               path="/voucher-dashboard" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="voucher">
                   <VoucherDashboardPage />
                 </ProtectedRoute>
               } 
@@ -143,7 +176,7 @@ const App = () => (
             <Route 
               path="/dashboard/voucher" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="voucher">
                   <VoucherDashboardPage />
                 </ProtectedRoute>
               } 
@@ -151,7 +184,7 @@ const App = () => (
             <Route 
               path="/dashboard/requester" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="requester">
                   <RequesterDashboardPage />
                 </ProtectedRoute>
               } 

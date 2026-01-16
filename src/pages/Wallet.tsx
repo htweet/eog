@@ -2,7 +2,6 @@ import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { WalletCard } from "@/components/wallet/WalletCard";
 import { TransactionHistory } from "@/components/wallet/TransactionHistory";
-import { WithdrawalCard } from "@/components/wallet/WithdrawalCard";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function Wallet() {
@@ -24,7 +23,6 @@ export default function Wallet() {
           </div>
 
           <WalletCard />
-          {userRole === "voucher" && <WithdrawalCard />}
           <TransactionHistory />
         </div>
       </main>
