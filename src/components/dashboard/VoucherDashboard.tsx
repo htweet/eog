@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { WalletCard } from "@/components/wallet/WalletCard";
 import { WithdrawalCard } from "@/components/wallet/WithdrawalCard";
 import { MapPin, DollarSign, Star, CheckCircle, Clock, Briefcase, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useRealtimeTaskNotifications } from "@/hooks/useRealtimeTaskNotifications";
 
 interface Task {
   id: string;
@@ -38,13 +39,10 @@ export function VoucherDashboard() {
     totalEarned: 0,
   });
 
-  useEffect(() => {
-    if (user) {
-      fetchData();
-    }
-  }, [user]);
+  // Enable realtime notifications
+  useRealtimeTaskNotifications();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
 
     // Fetch voucher's assigned and completed tasks
@@ -59,7 +57,7 @@ export function VoucherDashboard() {
     } else {
       setMyTasks(tasksData || []);
       
-      const assignedCount = tasksData?.filter(t => t.status === "assigned").length || 0;
+      const assignedCount = tasksData?.filter(t => t.status === "assigned" || t.status === "pending_review").length || 0;
       const completedCount = tasksData?.filter(t => t.status === "completed").length || 0;
       const totalEarned = tasksData?.filter(t => t.status === "completed")
         .reduce((sum, t) => sum + Number(t.bounty_amount), 0) || 0;
@@ -79,7 +77,37 @@ export function VoucherDashboard() {
     }
 
     setLoading(false);
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchData();
+    }
+
+    // Subscribe to realtime updates for voucher's tasks
+    if (!user) return;
+
+    const channel = supabase
+      .channel('voucher-tasks')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks',
+          filter: `voucher_id=eq.${user.id}`,
+        },
+        () => {
+          // Refetch on any change
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchData]);
 
   const getStatusBadge = (status: string) => {
     const colors: Record<string, string> = {

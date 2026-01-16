@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useRealtimePayouts } from "@/hooks/useRealtimePayouts";
 import {
   Table,
   TableBody,
@@ -31,6 +32,7 @@ import {
   Loader2,
   Eye,
   AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -56,7 +58,10 @@ export function PayoutManagement() {
   const [adminNotes, setAdminNotes] = useState("");
   const [processing, setProcessing] = useState(false);
 
-  const { data: payoutRequests, isLoading } = useQuery({
+  // Enable realtime updates
+  useRealtimePayouts();
+
+  const { data: payoutRequests, isLoading, refetch } = useQuery({
     queryKey: ["admin-payouts"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -76,7 +81,6 @@ export function PayoutManagement() {
       })) as PayoutRequest[];
     },
   });
-
   const pendingRequests = payoutRequests?.filter((r) => r.status === "pending") || [];
   const totalPending = pendingRequests.reduce((sum, r) => sum + r.amount, 0);
 
@@ -218,9 +222,15 @@ export function PayoutManagement() {
 
       {/* Requests Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Payout Requests</CardTitle>
-          <CardDescription>Review and process withdrawal requests</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Payout Requests</CardTitle>
+            <CardDescription>Review and process withdrawal requests</CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
         </CardHeader>
         <CardContent>
           {isLoading ? (
