@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { WalletCard } from "@/components/wallet/WalletCard";
 import { Plus, Clock, CheckCircle, AlertCircle, DollarSign, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useRealtimeTaskNotifications } from "@/hooks/useRealtimeTaskNotifications";
 
 interface Task {
   id: string;
@@ -30,13 +31,10 @@ export function RequesterDashboard() {
     totalSpent: 0,
   });
 
-  useEffect(() => {
-    if (user) {
-      fetchMyTasks();
-    }
-  }, [user]);
+  // Enable realtime notifications
+  useRealtimeTaskNotifications();
 
-  const fetchMyTasks = async () => {
+  const fetchMyTasks = useCallback(async () => {
     if (!user) return;
 
     const { data, error } = await supabase
@@ -52,7 +50,7 @@ export function RequesterDashboard() {
       
       // Calculate stats
       const openCount = data?.filter(t => t.status === "open").length || 0;
-      const assignedCount = data?.filter(t => t.status === "assigned").length || 0;
+      const assignedCount = data?.filter(t => t.status === "assigned" || t.status === "pending_review").length || 0;
       const completedCount = data?.filter(t => t.status === "completed").length || 0;
       const totalSpent = data?.filter(t => t.status === "completed")
         .reduce((sum, t) => sum + Number(t.bounty_amount), 0) || 0;
@@ -60,7 +58,37 @@ export function RequesterDashboard() {
       setStats({ open: openCount, assigned: assignedCount, completed: completedCount, totalSpent });
     }
     setLoading(false);
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchMyTasks();
+    }
+
+    // Subscribe to realtime updates for requester's tasks
+    if (!user) return;
+
+    const channel = supabase
+      .channel('requester-tasks')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks',
+          filter: `requester_id=eq.${user.id}`,
+        },
+        () => {
+          // Refetch on any change
+          fetchMyTasks();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchMyTasks]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
