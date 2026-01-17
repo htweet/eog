@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,18 +6,10 @@ import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { BountyCard } from "@/components/BountyCard";
 import { InteractiveMapView } from "@/components/map/InteractiveMapView";
+import { BrowseFilters } from "@/components/browse/BrowseFilters";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Flame, Search, Filter, Loader2, MapPin, List, Map } from "lucide-react";
+import { Flame, Loader2, MapPin, List, Map } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface Task {
   id: string;
@@ -29,6 +21,7 @@ interface Task {
   created_at: string;
   latitude: number | null;
   longitude: number | null;
+  required_tier: string | null;
 }
 
 const categories = [
@@ -39,6 +32,16 @@ const categories = [
   { value: "general", label: "General Items" },
 ];
 
+interface FilterState {
+  searchQuery: string;
+  category: string;
+  sortBy: string;
+  minBounty: number;
+  maxBounty: number;
+  maxDistance: number;
+  tierFilter: string;
+}
+
 export default function Browse() {
   const navigate = useNavigate();
   const { user, userRole } = useAuth();
@@ -46,19 +49,34 @@ export default function Browse() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [claiming, setClaiming] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [voucherTier, setVoucherTier] = useState<string>("standard");
+  
+  const [filters, setFilters] = useState<FilterState>({
+    searchQuery: "",
+    category: "all",
+    sortBy: "newest",
+    minBounty: 0,
+    maxBounty: 10000,
+    maxDistance: 50,
+    tierFilter: "all",
+  });
 
   useEffect(() => {
     fetchTasks();
+    fetchVoucherTier();
+    
     // Get user location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (pos) => {
+          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          // Update user's current location in profile
+          if (user) {
+            updateUserLocation(pos.coords.latitude, pos.coords.longitude);
+          }
+        },
         () => {}
       );
     }
@@ -66,7 +84,33 @@ export default function Browse() {
 
   useEffect(() => {
     filterAndSortTasks();
-  }, [tasks, searchQuery, selectedCategory, sortBy]);
+  }, [tasks, filters, userLocation, voucherTier]);
+
+  const updateUserLocation = async (lat: number, lng: number) => {
+    if (!user) return;
+    
+    await supabase
+      .from("profiles")
+      .update({
+        last_seen_at: new Date().toISOString(),
+        is_online: true,
+      })
+      .eq("id", user.id);
+  };
+
+  const fetchVoucherTier = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from("profiles")
+      .select("voucher_tier")
+      .eq("id", user.id)
+      .single();
+    
+    if (data?.voucher_tier) {
+      setVoucherTier(data.voucher_tier);
+    }
+  };
 
   const fetchTasks = async () => {
     const { data, error } = await supabase
@@ -88,25 +132,73 @@ export default function Browse() {
     setLoading(false);
   };
 
-  const filterAndSortTasks = () => {
+  const calculateDistance = useCallback((lat1: number, lng1: number, lat2: number | null, lng2: number | null): number | null => {
+    if (lat2 === null || lng2 === null) return null;
+    
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  }, []);
+
+  const filterAndSortTasks = useCallback(() => {
     let filtered = [...tasks];
 
+    // Filter by tier - hide pro_only tasks from standard vouchers
+    if (userRole === "voucher" && voucherTier !== "pro") {
+      filtered = filtered.filter((task) => task.required_tier !== "pro_only");
+    }
+
+    // Apply tier filter
+    if (filters.tierFilter !== "all") {
+      if (filters.tierFilter === "pro") {
+        filtered = filtered.filter((task) => task.required_tier === "pro_only");
+      } else {
+        filtered = filtered.filter((task) => task.required_tier !== "pro_only");
+      }
+    }
+
     // Filter by search query
-    if (searchQuery) {
+    if (filters.searchQuery) {
+      const query = filters.searchQuery.toLowerCase();
       filtered = filtered.filter(
         (task) =>
-          task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          task.address.toLowerCase().includes(searchQuery.toLowerCase())
+          task.title.toLowerCase().includes(query) ||
+          task.address.toLowerCase().includes(query)
       );
     }
 
     // Filter by category
-    if (selectedCategory !== "all") {
-      filtered = filtered.filter((task) => task.category === selectedCategory);
+    if (filters.category !== "all") {
+      filtered = filtered.filter((task) => task.category === filters.category);
+    }
+
+    // Filter by bounty range
+    filtered = filtered.filter(
+      (task) =>
+        task.bounty_amount >= filters.minBounty &&
+        task.bounty_amount <= filters.maxBounty
+    );
+
+    // Filter by distance if user location is available
+    if (userLocation && filters.maxDistance < 50) {
+      filtered = filtered.filter((task) => {
+        const distance = calculateDistance(
+          userLocation.lat,
+          userLocation.lng,
+          task.latitude,
+          task.longitude
+        );
+        return distance === null || distance <= filters.maxDistance;
+      });
     }
 
     // Sort
-    switch (sortBy) {
+    switch (filters.sortBy) {
       case "newest":
         filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         break;
@@ -119,44 +211,21 @@ export default function Browse() {
       case "lowest":
         filtered.sort((a, b) => a.bounty_amount - b.bounty_amount);
         break;
+      case "nearest":
+        if (userLocation) {
+          filtered.sort((a, b) => {
+            const distA = calculateDistance(userLocation.lat, userLocation.lng, a.latitude, a.longitude);
+            const distB = calculateDistance(userLocation.lat, userLocation.lng, b.latitude, b.longitude);
+            if (distA === null) return 1;
+            if (distB === null) return -1;
+            return distA - distB;
+          });
+        }
+        break;
     }
 
     setFilteredTasks(filtered);
-  };
-
-  const claimTask = async (taskId: string) => {
-    if (!user || userRole !== "voucher") {
-      toast({
-        title: "Error",
-        description: "Only vouchers can claim tasks",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setClaiming(taskId);
-
-    const { error } = await supabase
-      .from("tasks")
-      .update({ voucher_id: user.id, status: "assigned" })
-      .eq("id", taskId)
-      .eq("status", "open");
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to claim task. It may have been claimed by someone else.",
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: "Task claimed successfully! Check your dashboard.",
-      });
-      fetchTasks();
-    }
-    setClaiming(null);
-  };
+  }, [tasks, filters, userLocation, voucherTier, userRole, calculateDistance]);
 
   const getTimeAgo = (date: string) => {
     const now = new Date();
@@ -176,6 +245,13 @@ export default function Browse() {
       return category as "auto" | "realestate" | "electronics" | "general";
     }
     return "general";
+  };
+
+  const getDistance = (task: Task): string => {
+    if (!userLocation || !task.latitude || !task.longitude) return "--";
+    const distance = calculateDistance(userLocation.lat, userLocation.lng, task.latitude, task.longitude);
+    if (distance === null) return "--";
+    return `${distance.toFixed(1)} km`;
   };
 
   return (
@@ -215,68 +291,13 @@ export default function Browse() {
         </div>
 
         {/* Filters */}
-        <div className="mb-6 space-y-4">
-          <div className="flex flex-col gap-4 sm:flex-row">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search tasks..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <Filter className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-[150px]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="highest">Highest Bounty</SelectItem>
-                <SelectItem value="lowest">Lowest Bounty</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Active filters */}
-          <div className="flex flex-wrap gap-2">
-            {selectedCategory !== "all" && (
-              <Badge variant="secondary" className="capitalize">
-                {selectedCategory}
-                <button
-                  onClick={() => setSelectedCategory("all")}
-                  className="ml-2 hover:text-destructive"
-                >
-                  ×
-                </button>
-              </Badge>
-            )}
-            {searchQuery && (
-              <Badge variant="secondary">
-                Search: {searchQuery}
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="ml-2 hover:text-destructive"
-                >
-                  ×
-                </button>
-              </Badge>
-            )}
-          </div>
+        <div className="mb-6">
+          <BrowseFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            userLocation={userLocation}
+            categories={categories}
+          />
         </div>
 
         {/* Results count */}
@@ -307,11 +328,12 @@ export default function Browse() {
                 <BountyCard
                   title={task.title}
                   location={task.address}
-                  distance="--"
+                  distance={getDistance(task)}
                   price={task.bounty_amount}
                   category={getCategoryType(task.category)}
                   timePosted={getTimeAgo(task.created_at)}
                   urgency="medium"
+                  isPro={task.required_tier === "pro_only"}
                   onClick={() => navigate(`/task/${task.id}`)}
                 />
               </div>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ReviewsList } from "@/components/review/ReviewsList";
 import { WalletCard } from "@/components/wallet/WalletCard";
 import { WithdrawalCard } from "@/components/wallet/WithdrawalCard";
+import { ProOpportunitiesSection } from "@/components/voucher/ProOpportunitiesSection";
 import { MapPin, DollarSign, Star, CheckCircle, Clock, Briefcase, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useRealtimeTaskNotifications } from "@/hooks/useRealtimeTaskNotifications";
@@ -197,6 +198,9 @@ export function VoucherDashboard() {
 
       {/* Wallet Card */}
       <WalletCard />
+      
+      {/* Pro Opportunities Section (for standard vouchers) */}
+      <ProOpportunitiesSection />
       
       {/* Withdrawal Card */}
       <WithdrawalCard />
