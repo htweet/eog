@@ -10,6 +10,7 @@ interface BountyCardProps {
   category: "auto" | "realestate" | "electronics" | "general";
   timePosted: string;
   urgency?: "low" | "medium" | "high";
+  isPro?: boolean;
   onClick?: () => void;
 }
 
@@ -57,6 +58,7 @@ export function BountyCard({
   category,
   timePosted,
   urgency = "medium",
+  isPro = false,
   onClick,
 }: BountyCardProps) {
   const Icon = categoryIcons[category];
