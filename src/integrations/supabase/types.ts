@@ -14,6 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
+      escrow_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          held_at: string | null
+          id: string
+          notes: string | null
+          platform_fee: number | null
+          processed_by: string | null
+          refunded_at: string | null
+          released_at: string | null
+          requester_id: string
+          status: Database["public"]["Enums"]["escrow_status"] | null
+          task_id: string
+          updated_at: string | null
+          voucher_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          held_at?: string | null
+          id?: string
+          notes?: string | null
+          platform_fee?: number | null
+          processed_by?: string | null
+          refunded_at?: string | null
+          released_at?: string | null
+          requester_id: string
+          status?: Database["public"]["Enums"]["escrow_status"] | null
+          task_id: string
+          updated_at?: string | null
+          voucher_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          held_at?: string | null
+          id?: string
+          notes?: string | null
+          platform_fee?: number | null
+          processed_by?: string | null
+          refunded_at?: string | null
+          released_at?: string | null
+          requester_id?: string
+          status?: Database["public"]["Enums"]["escrow_status"] | null
+          task_id?: string
+          updated_at?: string | null
+          voucher_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escrow_transactions_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escrow_transactions_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escrow_transactions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escrow_transactions_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_streams: {
         Row: {
           ended_at: string | null
@@ -167,37 +247,141 @@ export type Database = {
           },
         ]
       }
+      platform_settings: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value: Json
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pro_upgrade_requests: {
+        Row: {
+          company_name: string
+          created_at: string | null
+          document_urls: Json | null
+          id: string
+          registration_number: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          company_name: string
+          created_at?: string | null
+          document_urls?: Json | null
+          id?: string
+          registration_number: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string | null
+          document_urls?: Json | null
+          id?: string
+          registration_number?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pro_upgrade_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pro_upgrade_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           bio: string | null
+          company_details: Json | null
           created_at: string | null
+          escrow_balance: number | null
           full_name: string | null
           id: string
           is_verified: boolean | null
           trust_score: number | null
+          voucher_tier: Database["public"]["Enums"]["voucher_tier"] | null
           wallet_balance: number | null
           withdrawable_balance: number | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          company_details?: Json | null
           created_at?: string | null
+          escrow_balance?: number | null
           full_name?: string | null
           id: string
           is_verified?: boolean | null
           trust_score?: number | null
+          voucher_tier?: Database["public"]["Enums"]["voucher_tier"] | null
           wallet_balance?: number | null
           withdrawable_balance?: number | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          company_details?: Json | null
           created_at?: string | null
+          escrow_balance?: number | null
           full_name?: string | null
           id?: string
           is_verified?: boolean | null
           trust_score?: number | null
+          voucher_tier?: Database["public"]["Enums"]["voucher_tier"] | null
           wallet_balance?: number | null
           withdrawable_balance?: number | null
         }
@@ -252,10 +436,13 @@ export type Database = {
           category: string
           checklist: Json | null
           created_at: string | null
+          description: string | null
           id: string
           latitude: number | null
           longitude: number | null
+          pro_fee_multiplier: number | null
           requester_id: string
+          required_tier: Database["public"]["Enums"]["task_tier"] | null
           status: string | null
           title: string
           voucher_id: string | null
@@ -266,10 +453,13 @@ export type Database = {
           category: string
           checklist?: Json | null
           created_at?: string | null
+          description?: string | null
           id?: string
           latitude?: number | null
           longitude?: number | null
+          pro_fee_multiplier?: number | null
           requester_id: string
+          required_tier?: Database["public"]["Enums"]["task_tier"] | null
           status?: string | null
           title: string
           voucher_id?: string | null
@@ -280,10 +470,13 @@ export type Database = {
           category?: string
           checklist?: Json | null
           created_at?: string | null
+          description?: string | null
           id?: string
           latitude?: number | null
           longitude?: number | null
+          pro_fee_multiplier?: number | null
           requester_id?: string
+          required_tier?: Database["public"]["Enums"]["task_tier"] | null
           status?: string | null
           title?: string
           voucher_id?: string | null
@@ -299,6 +492,50 @@ export type Database = {
           {
             foreignKeyName: "tasks_voucher_id_fkey"
             columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_members: {
+        Row: {
+          created_at: string | null
+          id: string
+          parent_company_id: string
+          staff_email: string
+          staff_name: string
+          staff_pin_code: string
+          status: Database["public"]["Enums"]["staff_status"] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          parent_company_id: string
+          staff_email: string
+          staff_name: string
+          staff_pin_code: string
+          status?: Database["public"]["Enums"]["staff_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          parent_company_id?: string
+          staff_email?: string
+          staff_name?: string
+          staff_pin_code?: string
+          status?: Database["public"]["Enums"]["staff_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_parent_company_id_fkey"
+            columns: ["parent_company_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -377,6 +614,7 @@ export type Database = {
       verifications: {
         Row: {
           ai_analysis_score: number | null
+          assigned_staff_id: string | null
           completed_checklist: Json | null
           device_timestamp: string | null
           gps_latitude: number | null
@@ -388,6 +626,7 @@ export type Database = {
         }
         Insert: {
           ai_analysis_score?: number | null
+          assigned_staff_id?: string | null
           completed_checklist?: Json | null
           device_timestamp?: string | null
           gps_latitude?: number | null
@@ -399,6 +638,7 @@ export type Database = {
         }
         Update: {
           ai_analysis_score?: number | null
+          assigned_staff_id?: string | null
           completed_checklist?: Json | null
           device_timestamp?: string | null
           gps_latitude?: number | null
@@ -478,9 +718,21 @@ export type Database = {
         }
         Returns: boolean
       }
+      refund_escrow: {
+        Args: { p_admin_id?: string; p_reason?: string; p_task_id: string }
+        Returns: Json
+      }
+      release_escrow: {
+        Args: { p_admin_id?: string; p_task_id: string; p_voucher_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "requester" | "voucher" | "admin"
+      escrow_status: "held" | "released" | "refunded" | "disputed"
+      staff_status: "active" | "inactive" | "pending"
+      task_tier: "any" | "pro_only"
+      voucher_tier: "standard" | "pro" | "pending_pro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -609,6 +861,10 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["requester", "voucher", "admin"],
+      escrow_status: ["held", "released", "refunded", "disputed"],
+      staff_status: ["active", "inactive", "pending"],
+      task_tier: ["any", "pro_only"],
+      voucher_tier: ["standard", "pro", "pending_pro"],
     },
   },
 } as const
