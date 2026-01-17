@@ -22,6 +22,9 @@ import { AIVideoAnalysis } from "@/components/admin/AIVideoAnalysis";
 import { LiveStreamingPanel } from "@/components/admin/LiveStreamingPanel";
 import { AdminManagement } from "@/components/admin/AdminManagement";
 import { PayoutManagement } from "@/components/admin/PayoutManagement";
+import { ProValidation } from "@/components/admin/ProValidation";
+import { EscrowManagement } from "@/components/admin/EscrowManagement";
+import { AgencyExplorer } from "@/components/admin/AgencyExplorer";
 import {
   Shield,
   Users,
@@ -41,6 +44,9 @@ import {
   IdCard,
   Sliders,
   Banknote,
+  Crown,
+  Lock,
+  Building2,
 } from "lucide-react";
 
 export default function Admin() {
@@ -176,7 +182,7 @@ export default function Admin() {
 
         {/* Tabs */}
         <Tabs defaultValue="analytics" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-13 lg:w-auto lg:inline-grid">
             <TabsTrigger value="analytics" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Analytics</span>
@@ -185,9 +191,21 @@ export default function Admin() {
               <Sliders className="h-4 w-4" />
               <span className="hidden sm:inline">Manage</span>
             </TabsTrigger>
+            <TabsTrigger value="escrow" className="gap-2">
+              <Lock className="h-4 w-4" />
+              <span className="hidden sm:inline">Escrow</span>
+            </TabsTrigger>
             <TabsTrigger value="payouts" className="gap-2">
               <Banknote className="h-4 w-4" />
               <span className="hidden sm:inline">Payouts</span>
+            </TabsTrigger>
+            <TabsTrigger value="pro-validation" className="gap-2">
+              <Crown className="h-4 w-4" />
+              <span className="hidden sm:inline">Pro</span>
+            </TabsTrigger>
+            <TabsTrigger value="agencies" className="gap-2">
+              <Building2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Agencies</span>
             </TabsTrigger>
             <TabsTrigger value="disputes" className="gap-2">
               <AlertTriangle className="h-4 w-4" />
@@ -198,7 +216,7 @@ export default function Admin() {
             </TabsTrigger>
             <TabsTrigger value="ai-analysis" className="gap-2">
               <Brain className="h-4 w-4" />
-              <span className="hidden sm:inline">AI Analysis</span>
+              <span className="hidden sm:inline">AI</span>
             </TabsTrigger>
             <TabsTrigger value="streaming" className="gap-2">
               <Video className="h-4 w-4" />
@@ -235,6 +253,21 @@ export default function Admin() {
           {/* Payouts Tab */}
           <TabsContent value="payouts">
             <PayoutManagement />
+          </TabsContent>
+
+          {/* Escrow Management Tab */}
+          <TabsContent value="escrow">
+            <EscrowManagement />
+          </TabsContent>
+
+          {/* Pro Validation Tab */}
+          <TabsContent value="pro-validation">
+            <ProValidation />
+          </TabsContent>
+
+          {/* Agency Explorer Tab */}
+          <TabsContent value="agencies">
+            <AgencyExplorer />
           </TabsContent>
 
           {/* AI Video Analysis Tab (Phase 8.1) */}
