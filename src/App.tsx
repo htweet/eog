@@ -24,6 +24,7 @@ import VoucherDashboardPage from "./pages/VoucherDashboardPage";
 import RequesterDashboardPage from "./pages/RequesterDashboardPage";
 import Install from "./pages/Install";
 import Landing from "./pages/Landing";
+import AgencyDashboard from "./pages/AgencyDashboard";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
@@ -186,6 +187,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="requester">
                   <RequesterDashboardPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/agency" 
+              element={
+                <ProtectedRoute requiredRole="voucher">
+                  <AgencyDashboard />
                 </ProtectedRoute>
               } 
             />

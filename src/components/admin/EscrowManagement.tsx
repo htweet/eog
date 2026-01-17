@@ -100,7 +100,7 @@ export function EscrowManagement() {
   const totalHeld = heldEscrows.reduce((sum, t) => sum + t.amount, 0);
 
   const handleRelease = async () => {
-    if (!selectedEscrow || !selectedEscrow.task?.voucher_id) {
+    if (!selectedEscrow || !selectedEscrow.voucher_id) {
       toast({
         title: "Error",
         description: "No voucher assigned to this task",
@@ -110,7 +110,7 @@ export function EscrowManagement() {
     }
     
     setProcessing(true);
-    const result = await releaseEscrow(selectedEscrow.task_id, selectedEscrow.task.voucher_id);
+    const result = await releaseEscrow(selectedEscrow.task_id, selectedEscrow.voucher_id);
     setProcessing(false);
 
     if (result.success) {
@@ -385,7 +385,7 @@ export function EscrowManagement() {
             {actionType === 'release' && (
               <Button
                 onClick={handleRelease}
-                disabled={processing || !selectedEscrow?.task?.voucher_id}
+                disabled={processing || !selectedEscrow?.voucher_id}
                 className="bg-green-600 hover:bg-green-700"
               >
                 {processing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Unlock className="h-4 w-4 mr-1" />}
