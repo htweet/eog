@@ -88,6 +88,7 @@ export function WithdrawalCard() {
     ?.filter((r) => r.status === "pending")
     .reduce((sum, r) => sum + r.amount, 0) || 0;
 
+  // SECURE: Uses server-side RPC function for atomic withdrawal operations
   const handleSubmit = async () => {
     const amount = parseFloat(formData.amount);
     
@@ -106,25 +107,35 @@ export function WithdrawalCard() {
       return;
     }
 
+    // Validate account number format (10 digits for Nigerian banks)
+    if (!/^\d{10}$/.test(formData.accountNumber)) {
+      toast({ title: "Account number must be 10 digits", variant: "destructive" });
+      return;
+    }
+
     setSubmitting(true);
 
     try {
-      const { error } = await supabase.from("payout_requests").insert({
-        user_id: user?.id,
-        amount: amount,
-        bank_name: formData.bankName,
-        account_number: formData.accountNumber,
-        account_name: formData.accountName,
-        status: "pending",
+      // Use secure RPC function instead of direct database operations
+      const { data, error } = await supabase.rpc("withdraw_funds_secure", {
+        p_amount: amount,
+        p_bank_name: formData.bankName,
+        p_account_number: formData.accountNumber,
+        p_account_name: formData.accountName,
       });
 
       if (error) throw error;
 
-      // Update withdrawable balance
-      await supabase
-        .from("profiles")
-        .update({ withdrawable_balance: withdrawableBalance - amount })
-        .eq("id", user?.id);
+      const result = data as { success: boolean; error?: string; amount?: number };
+      
+      if (!result.success) {
+        toast({
+          title: "Request Failed",
+          description: result.error || "Could not process withdrawal request",
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Withdrawal Requested",

@@ -912,6 +912,10 @@ export type Database = {
         Returns: unknown
       }
       _st_within: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
+      add_funds_secure: {
+        Args: { p_amount: number; p_description?: string }
+        Returns: Json
+      }
       addauth: { Args: { "": string }; Returns: boolean }
       addgeometrycolumn:
         | {
@@ -1091,6 +1095,7 @@ export type Database = {
         Returns: boolean
       }
       geomfromewkt: { Args: { "": string }; Returns: unknown }
+      get_public_profile: { Args: { p_user_id: string }; Returns: Json }
       gettransactionid: { Args: never; Returns: unknown }
       has_role: {
         Args: {
@@ -1098,6 +1103,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      hold_escrow_secure: {
+        Args: { p_amount: number; p_task_id: string }
+        Returns: Json
       }
       longtransactionsenabled: { Args: never; Returns: boolean }
       populate_geometry_columns:
@@ -1739,6 +1748,15 @@ export type Database = {
           table_name: string
         }
         Returns: string
+      }
+      withdraw_funds_secure: {
+        Args: {
+          p_account_name: string
+          p_account_number: string
+          p_amount: number
+          p_bank_name: string
+        }
+        Returns: Json
       }
     }
     Enums: {
