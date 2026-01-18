@@ -178,7 +178,7 @@ export function RequesterDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Spent</p>
-                <p className="text-3xl font-bold text-foreground">${stats.totalSpent}</p>
+                <p className="text-3xl font-bold text-foreground">₦{stats.totalSpent.toLocaleString()}</p>
               </div>
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                 <DollarSign className="h-6 w-6 text-primary" />
@@ -260,7 +260,7 @@ export function RequesterDashboard() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right hidden sm:block">
-                      <p className="font-semibold text-foreground">${task.bounty_amount}</p>
+                      <p className="font-semibold text-foreground">₦{task.bounty_amount.toLocaleString()}</p>
                       <p className="text-xs text-muted-foreground capitalize">{task.category}</p>
                     </div>
                     {getStatusBadge(task.status)}

@@ -114,8 +114,8 @@ export function BountyCard({
             <div className="flex items-center gap-3">
               {/* Price */}
               <div className="flex items-center gap-1">
-                <DollarSign className="h-4 w-4 text-accent" />
-                <span className="font-bold text-foreground">${price}</span>
+                <span className="text-accent font-medium">₦</span>
+                <span className="font-bold text-foreground">{price.toLocaleString()}</span>
               </div>
               {/* Time */}
               <div className="flex items-center gap-1 text-xs text-muted-foreground">

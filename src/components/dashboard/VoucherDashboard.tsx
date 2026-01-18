@@ -173,7 +173,7 @@ export function VoucherDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Earned</p>
-                <p className="text-3xl font-bold text-foreground">${stats.totalEarned}</p>
+                <p className="text-3xl font-bold text-foreground">₦{stats.totalEarned.toLocaleString()}</p>
               </div>
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                 <DollarSign className="h-6 w-6 text-primary" />
@@ -252,7 +252,7 @@ export function VoucherDashboard() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <p className="font-semibold text-accent">${task.bounty_amount}</p>
+                      <p className="font-semibold text-accent">₦{task.bounty_amount.toLocaleString()}</p>
                       <p className="text-xs text-muted-foreground capitalize">{task.category}</p>
                     </div>
                     {getStatusBadge(task.status)}
@@ -286,7 +286,7 @@ export function VoucherDashboard() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-accent">+${task.bounty_amount}</p>
+                    <p className="font-semibold text-accent">+₦{task.bounty_amount.toLocaleString()}</p>
                     {getStatusBadge(task.status)}
                   </div>
                 </div>

@@ -27,7 +27,7 @@ export function WalletCard() {
             {loading ? (
               <Loader2 className="h-8 w-8 animate-spin" />
             ) : (
-              <p className="text-4xl font-bold">${balance.toFixed(2)}</p>
+              <p className="text-4xl font-bold">₦{balance.toLocaleString()}</p>
             )}
             <p className={userRole === "voucher" ? "text-accent-foreground/80 text-sm" : "text-muted-foreground text-sm"}>
               Available balance

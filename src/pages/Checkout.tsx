@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,7 +17,8 @@ export default function Checkout() {
   const [name, setName] = useState(user?.user_metadata?.full_name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [amount, setAmount] = useState("");
-  const [currency, setCurrency] = useState("NGN");
+  // Fixed to NGN only
+  const currency = "NGN";
   const [processing, setProcessing] = useState(false);
 
   const handlePayment = async () => {
@@ -117,19 +117,9 @@ export default function Checkout() {
 
               <div className="space-y-2">
                 <Label htmlFor="currency">Currency</Label>
-                <Select value={currency} onValueChange={setCurrency}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="NGN">Nigerian Naira (₦)</SelectItem>
-                    <SelectItem value="USD">US Dollar ($)</SelectItem>
-                    <SelectItem value="GBP">British Pound (£)</SelectItem>
-                    <SelectItem value="EUR">Euro (€)</SelectItem>
-                    <SelectItem value="GHS">Ghanaian Cedi (₵)</SelectItem>
-                    <SelectItem value="KES">Kenyan Shilling (KSh)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+                  <span className="font-medium">₦ Nigerian Naira (NGN)</span>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -154,8 +144,7 @@ export default function Checkout() {
                       size="sm"
                       onClick={() => setAmount(quickAmount.toString())}
                     >
-                      {currency === "NGN" ? "₦" : currency === "USD" ? "$" : ""}
-                      {quickAmount.toLocaleString()}
+                      ₦{quickAmount.toLocaleString()}
                     </Button>
                   ))}
                 </div>

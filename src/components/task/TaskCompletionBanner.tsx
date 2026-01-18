@@ -34,14 +34,14 @@ export function TaskCompletionBanner({
               </h3>
               <p className="text-sm text-green-600 dark:text-green-500">
                 {isVoucher 
-                  ? `You earned $${bountyAmount.toFixed(2)} for this verification`
-                  : `Payment of $${bountyAmount.toFixed(2)} has been released`
+                  ? `You earned ₦${bountyAmount.toLocaleString()} for this verification`
+                  : `Payment of ₦${bountyAmount.toLocaleString()} has been released`
                 }
               </p>
             </div>
             <div className="flex items-center gap-1 text-xl font-bold text-green-600 shrink-0">
-              <DollarSign className="h-5 w-5" />
-              {bountyAmount.toFixed(2)}
+              <span>₦</span>
+              {bountyAmount.toLocaleString()}
             </div>
           </div>
         </CardContent>

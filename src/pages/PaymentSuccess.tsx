@@ -76,37 +76,33 @@ export default function PaymentSuccess() {
         setVerifying(false);
         setProcessing(true);
 
-        // Step 2: Update wallet balance if user is logged in
+        // Step 2: Use secure RPC to update wallet balance (atomic operation)
         if (user && pendingAmount) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('wallet_balance')
-            .eq('id', user.id)
-            .single();
-
-          const currentBalance = profile?.wallet_balance || 0;
           const verifiedAmount = verifyResult.data?.amount || parseFloat(pendingAmount);
-          const newBalance = currentBalance + verifiedAmount;
-
-          await supabase
-            .from('profiles')
-            .update({ wallet_balance: newBalance })
-            .eq('id', user.id);
-
-          // Record the transaction
-          await supabase.from('transactions').insert({
-            user_id: user.id,
-            type: 'deposit',
-            amount: verifiedAmount,
-            status: 'completed',
-            description: `Flutterwave deposit - ${tx_ref || pendingTxRef}`
+          
+          const { data: depositResult, error: depositError } = await supabase.rpc('process_deposit_secure', {
+            p_amount: verifiedAmount,
+            p_tx_ref: tx_ref || pendingTxRef || '',
+            p_transaction_id: transaction_id || ''
           });
+
+          const result = depositResult as { success?: boolean; error?: string } | null;
+
+          if (depositError) {
+            console.error("Error processing deposit:", depositError);
+            // Still show success since payment was verified, just couldn't update wallet
+            toast.warning("Payment verified but wallet update pending. Please contact support if balance is not updated.");
+          } else if (result?.success) {
+            toast.success("Payment verified! Funds added to your wallet.");
+          } else if (result?.error === 'Transaction already processed') {
+            toast.info("This payment has already been processed.");
+          } else {
+            toast.error(result?.error || "Failed to process deposit");
+          }
 
           // Clear pending data
           localStorage.removeItem('pending_amount');
           localStorage.removeItem('pending_tx_ref');
-
-          toast.success("Payment verified! Funds added to your wallet.");
         }
       } catch (error) {
         console.error("Error processing payment:", error);
