@@ -56,56 +56,26 @@ export function useEscrow() {
     }
   };
 
+  // SECURE: Uses server-side RPC function for atomic escrow operations
   const holdEscrow = async (taskId: string, requesterId: string, amount: number) => {
     if (!user) return { success: false, error: "Not authenticated" };
     
     setLoading(true);
     
     try {
-      // Get current wallet balance
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("wallet_balance")
-        .eq("id", requesterId)
-        .single();
-
-      if (!profile || (profile.wallet_balance || 0) < amount) {
-        return { success: false, error: "Insufficient balance" };
-      }
-
-      // Create escrow transaction
-      const { error: escrowError } = await supabase
-        .from("escrow_transactions")
-        .insert({
-          task_id: taskId,
-          requester_id: requesterId,
-          amount,
-          status: "held",
-        } as any);
-
-      if (escrowError) throw escrowError;
-
-      // Deduct from wallet, add to escrow balance
-      const newBalance = (profile.wallet_balance || 0) - amount;
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ 
-          wallet_balance: newBalance,
-          escrow_balance: amount 
-        })
-        .eq("id", requesterId);
-
-      if (updateError) throw updateError;
-
-      // Create transaction record
-      await supabase.from("transactions").insert({
-        user_id: requesterId,
-        task_id: taskId,
-        type: "escrow_hold",
-        amount: -amount,
-        status: "completed",
-        description: `Bounty held in escrow for task`,
+      // Use secure RPC function instead of direct database operations
+      const { data, error } = await supabase.rpc("hold_escrow_secure", {
+        p_task_id: taskId,
+        p_amount: amount,
       });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; error?: string; amount?: number };
+      
+      if (!result.success) {
+        return { success: false, error: result.error };
+      }
 
       return { success: true };
     } catch (error) {

@@ -16,6 +16,8 @@ interface Transaction {
 
 interface WalletState {
   balance: number;
+  withdrawableBalance: number;
+  escrowBalance: number;
   transactions: Transaction[];
   loading: boolean;
 }
@@ -25,6 +27,8 @@ export function useWallet() {
   const { toast } = useToast();
   const [state, setState] = useState<WalletState>({
     balance: 0,
+    withdrawableBalance: 0,
+    escrowBalance: 0,
     transactions: [],
     loading: true,
   });
@@ -43,7 +47,7 @@ export function useWallet() {
     // Fetch balance from profile
     const { data: profile } = await supabase
       .from("profiles")
-      .select("wallet_balance")
+      .select("wallet_balance, withdrawable_balance, escrow_balance")
       .eq("id", user.id)
       .single();
 
@@ -57,40 +61,39 @@ export function useWallet() {
 
     setState({
       balance: profile?.wallet_balance || 0,
+      withdrawableBalance: profile?.withdrawable_balance || 0,
+      escrowBalance: profile?.escrow_balance || 0,
       transactions: (transactions || []) as Transaction[],
       loading: false,
     });
   };
 
-  const addFunds = async (amount: number) => {
+  // SECURE: Uses server-side RPC function with atomic operations
+  const addFunds = async (amount: number, description?: string) => {
     if (!user || amount <= 0) return { success: false };
 
     try {
-      // Create transaction record
-      const { error: txError } = await supabase
-        .from("transactions")
-        .insert({
-          user_id: user.id,
-          type: "deposit",
-          amount,
-          status: "completed",
-          description: `Added $${amount.toFixed(2)} to wallet`,
+      const { data, error } = await supabase.rpc("add_funds_secure", {
+        p_amount: amount,
+        p_description: description || `Added ₦${amount.toFixed(2)} to wallet`,
+      });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; error?: string; amount?: number };
+      
+      if (!result.success) {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to add funds",
+          variant: "destructive",
         });
-
-      if (txError) throw txError;
-
-      // Update balance
-      const newBalance = state.balance + amount;
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ wallet_balance: newBalance })
-        .eq("id", user.id);
-
-      if (updateError) throw updateError;
+        return { success: false };
+      }
 
       toast({
         title: "Funds Added",
-        description: `$${amount.toFixed(2)} has been added to your wallet`,
+        description: `₦${amount.toLocaleString()} has been added to your wallet`,
       });
 
       await fetchWalletData();
@@ -106,42 +109,46 @@ export function useWallet() {
     }
   };
 
-  const withdrawFunds = async (amount: number) => {
-    if (!user || amount <= 0 || amount > state.balance) {
+  // SECURE: Uses server-side RPC function with atomic operations
+  const withdrawFunds = async (
+    amount: number, 
+    bankName: string, 
+    accountNumber: string, 
+    accountName: string
+  ) => {
+    if (!user || amount <= 0) {
       toast({
         title: "Error",
-        description: "Insufficient balance or invalid amount",
+        description: "Invalid withdrawal amount",
         variant: "destructive",
       });
       return { success: false };
     }
 
     try {
-      // Create transaction record
-      const { error: txError } = await supabase
-        .from("transactions")
-        .insert({
-          user_id: user.id,
-          type: "withdrawal",
-          amount: -amount,
-          status: "pending",
-          description: `Withdrawal of $${amount.toFixed(2)} requested`,
+      const { data, error } = await supabase.rpc("withdraw_funds_secure", {
+        p_amount: amount,
+        p_bank_name: bankName,
+        p_account_number: accountNumber,
+        p_account_name: accountName,
+      });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; error?: string; amount?: number };
+      
+      if (!result.success) {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to process withdrawal",
+          variant: "destructive",
         });
-
-      if (txError) throw txError;
-
-      // Update balance
-      const newBalance = state.balance - amount;
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ wallet_balance: newBalance })
-        .eq("id", user.id);
-
-      if (updateError) throw updateError;
+        return { success: false };
+      }
 
       toast({
         title: "Withdrawal Requested",
-        description: `$${amount.toFixed(2)} withdrawal is being processed`,
+        description: `₦${amount.toLocaleString()} withdrawal is being processed`,
       });
 
       await fetchWalletData();
@@ -157,34 +164,25 @@ export function useWallet() {
     }
   };
 
+  // SECURE: Uses server-side RPC function with atomic operations
   const holdEscrow = async (taskId: string, amount: number) => {
-    if (!user || amount <= 0 || amount > state.balance) {
-      return { success: false, error: "Insufficient balance" };
+    if (!user || amount <= 0) {
+      return { success: false, error: "Invalid amount" };
     }
 
     try {
-      // Create escrow hold transaction
-      const { error: txError } = await supabase
-        .from("transactions")
-        .insert({
-          user_id: user.id,
-          task_id: taskId,
-          type: "escrow_hold",
-          amount: -amount,
-          status: "completed",
-          description: `Bounty escrow for task`,
-        });
+      const { data, error } = await supabase.rpc("hold_escrow_secure", {
+        p_task_id: taskId,
+        p_amount: amount,
+      });
 
-      if (txError) throw txError;
+      if (error) throw error;
 
-      // Deduct from balance
-      const newBalance = state.balance - amount;
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ wallet_balance: newBalance })
-        .eq("id", user.id);
-
-      if (updateError) throw updateError;
+      const result = data as { success: boolean; error?: string; amount?: number };
+      
+      if (!result.success) {
+        return { success: false, error: result.error };
+      }
 
       await fetchWalletData();
       return { success: true };
@@ -194,46 +192,22 @@ export function useWallet() {
     }
   };
 
-  const releaseEscrow = async (taskId: string, voucherId: string, amount: number) => {
+  // SECURE: Uses existing release_escrow database function
+  const releaseEscrow = async (taskId: string, voucherId: string) => {
     if (!user) return { success: false };
 
     try {
-      // Create release transaction for requester
-      await supabase
-        .from("transactions")
-        .insert({
-          user_id: user.id,
-          task_id: taskId,
-          type: "bounty_paid",
-          amount: -amount,
-          status: "completed",
-          description: `Bounty paid for completed task`,
-        });
+      const { data, error } = await supabase.rpc("release_escrow", {
+        p_task_id: taskId,
+        p_voucher_id: voucherId,
+      });
 
-      // Create earning transaction for voucher
-      await supabase
-        .from("transactions")
-        .insert({
-          user_id: voucherId,
-          task_id: taskId,
-          type: "bounty_earned",
-          amount: amount,
-          status: "completed",
-          description: `Bounty earned for completing task`,
-        });
+      if (error) throw error;
 
-      // Update voucher's balance
-      const { data: voucherProfile } = await supabase
-        .from("profiles")
-        .select("wallet_balance")
-        .eq("id", voucherId)
-        .single();
-
-      if (voucherProfile) {
-        await supabase
-          .from("profiles")
-          .update({ wallet_balance: (voucherProfile.wallet_balance || 0) + amount })
-          .eq("id", voucherId);
+      const result = data as { success: boolean; error?: string; amount?: number };
+      
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
       await fetchWalletData();

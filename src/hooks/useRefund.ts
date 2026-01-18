@@ -11,57 +11,37 @@ export function useRefund() {
   const { toast } = useToast();
   const [processing, setProcessing] = useState(false);
 
+  // SECURE: Uses server-side RPC function for atomic refund operations
   const refundEscrow = async (
     taskId: string,
-    requesterId: string,
-    amount: number,
     reason: string = "Task cancelled - escrow refunded"
   ): Promise<RefundResult> => {
     setProcessing(true);
 
     try {
-      // Get requester's current balance
-      const { data: requesterProfile, error: profileError } = await supabase
-        .from("profiles")
-        .select("wallet_balance")
-        .eq("id", requesterId)
-        .single();
-
-      if (profileError) throw profileError;
-
-      // Create refund transaction
-      const { error: txError } = await supabase.from("transactions").insert({
-        user_id: requesterId,
-        task_id: taskId,
-        type: "escrow_release",
-        amount: amount,
-        status: "completed",
-        description: reason,
+      // Call the secure database function to refund escrow
+      const { data, error } = await supabase.rpc("refund_escrow", {
+        p_task_id: taskId,
+        p_reason: reason,
       });
 
-      if (txError) throw txError;
+      if (error) throw error;
 
-      // Update requester's balance
-      const newBalance = (requesterProfile?.wallet_balance || 0) + amount;
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ wallet_balance: newBalance })
-        .eq("id", requesterId);
-
-      if (updateError) throw updateError;
-
-      // Create notification
-      await supabase.from("notifications").insert({
-        user_id: requesterId,
-        type: "refund",
-        title: "Escrow Refunded",
-        message: `$${amount.toFixed(2)} has been refunded to your wallet. ${reason}`,
-        task_id: taskId,
-      });
+      const result = data as { success: boolean; error?: string; amount?: number };
+      
+      if (!result.success) {
+        toast({
+          title: "Refund Failed",
+          description: result.error || "Could not process the refund",
+          variant: "destructive",
+        });
+        setProcessing(false);
+        return { success: false, error: result.error };
+      }
 
       toast({
         title: "Refund Processed",
-        description: `$${amount.toFixed(2)} has been refunded to the requester`,
+        description: `₦${result.amount?.toLocaleString()} has been refunded`,
       });
 
       setProcessing(false);
@@ -80,7 +60,6 @@ export function useRefund() {
 
   const requestRefund = async (
     taskId: string,
-    requesterId: string,
     reason: string
   ): Promise<RefundResult> => {
     try {
@@ -92,7 +71,7 @@ export function useRefund() {
         .single();
 
       if (taskError || !task) {
-        throw new Error("Task not found");
+        return { success: false, error: "Task not found" };
       }
 
       // Check if task is eligible for refund
@@ -111,13 +90,8 @@ export function useRefund() {
 
       if (updateError) throw updateError;
 
-      // Process the refund
-      return await refundEscrow(
-        taskId,
-        requesterId,
-        task.bounty_amount,
-        reason || "Task cancelled by requester"
-      );
+      // Process the refund using secure RPC
+      return await refundEscrow(taskId, reason || "Task cancelled by requester");
     } catch (error) {
       console.error("Error requesting refund:", error);
       return { success: false, error: "Failed to request refund" };
@@ -137,11 +111,13 @@ export function useRefund() {
         .single();
 
       if (taskError || !task) {
-        throw new Error("Task not found or unauthorized");
+        setProcessing(false);
+        return { success: false, error: "Task not found or unauthorized" };
       }
 
       // Only allow cancellation of open or assigned tasks
       if (!["open", "assigned"].includes(task.status || "")) {
+        setProcessing(false);
         return {
           success: false,
           error: "Cannot cancel task in its current state",
@@ -167,13 +143,8 @@ export function useRefund() {
 
       if (updateError) throw updateError;
 
-      // Refund the escrow
-      const refundResult = await refundEscrow(
-        taskId,
-        requesterId,
-        task.bounty_amount,
-        "Task cancelled - full refund"
-      );
+      // Refund the escrow using secure RPC
+      const refundResult = await refundEscrow(taskId, "Task cancelled - full refund");
 
       setProcessing(false);
       return refundResult;
