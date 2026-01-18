@@ -107,7 +107,7 @@ export function TransactionHistory() {
                     <div className="text-right flex items-center gap-3">
                       <div>
                         <p className={`font-semibold ${isPositive ? "text-accent" : "text-foreground"}`}>
-                          {isPositive ? "+" : ""}${Math.abs(tx.amount).toFixed(2)}
+                          {isPositive ? "+" : ""}₦{Math.abs(tx.amount).toLocaleString()}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {format(new Date(tx.created_at), "h:mm a")}

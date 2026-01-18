@@ -954,6 +954,7 @@ export type Database = {
             }
             Returns: string
           }
+      claim_task_secure: { Args: { p_task_id: string }; Returns: Json }
       create_notification: {
         Args: {
           p_message: string
@@ -1096,6 +1097,10 @@ export type Database = {
       }
       geomfromewkt: { Args: { "": string }; Returns: unknown }
       get_public_profile: { Args: { p_user_id: string }; Returns: Json }
+      get_verification_video_url: {
+        Args: { p_task_id: string }
+        Returns: string
+      }
       gettransactionid: { Args: never; Returns: unknown }
       has_role: {
         Args: {
@@ -1104,6 +1109,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      hash_pin_code: { Args: { pin_code: string }; Returns: string }
       hold_escrow_secure: {
         Args: { p_amount: number; p_task_id: string }
         Returns: Json
@@ -1149,6 +1155,10 @@ export type Database = {
       }
       postgis_version: { Args: never; Returns: string }
       postgis_wagyu_version: { Args: never; Returns: string }
+      process_deposit_secure: {
+        Args: { p_amount: number; p_transaction_id: string; p_tx_ref: string }
+        Returns: Json
+      }
       refund_escrow: {
         Args: { p_admin_id?: string; p_reason?: string; p_task_id: string }
         Returns: Json
@@ -1748,6 +1758,10 @@ export type Database = {
           table_name: string
         }
         Returns: string
+      }
+      verify_team_member_pin: {
+        Args: { p_pin_code: string; p_team_member_id: string }
+        Returns: boolean
       }
       withdraw_funds_secure: {
         Args: {

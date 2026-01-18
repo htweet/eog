@@ -87,7 +87,7 @@ export function ProOpportunitiesSection({ onUpgrade }: ProOpportunitiesSectionPr
           </div>
           <h3 className="text-xl font-bold mb-2">Pro Opportunities</h3>
           <p className="text-muted-foreground mb-4 max-w-sm">
-            Unlock {proTasks.length} premium tasks worth up to <span className="text-amber-500 font-semibold">${totalProBounty.toFixed(0)}</span> in potential earnings
+            Unlock {proTasks.length} premium tasks worth up to <span className="text-amber-500 font-semibold">₦{totalProBounty.toLocaleString()}</span> in potential earnings
           </p>
           <Button 
             onClick={() => navigate("/settings")} 
@@ -132,8 +132,8 @@ export function ProOpportunitiesSection({ onUpgrade }: ProOpportunitiesSectionPr
                 </div>
                 <div className="text-right">
                   <div className="flex items-center gap-1 font-bold text-amber-500">
-                    <DollarSign className="h-4 w-4" />
-                    {task.bounty_amount.toFixed(0)}
+                    <span>₦</span>
+                    {task.bounty_amount.toLocaleString()}
                   </div>
                   <Badge variant="outline" className="text-xs border-amber-500/30 text-amber-500">
                     +{((task.pro_fee_multiplier || 1.4) - 1) * 100}% Premium

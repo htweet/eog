@@ -264,7 +264,7 @@ export function BrowseFilters({
         )}
         {filters.minBounty > 0 && (
           <Badge variant="secondary" className="gap-1">
-            Min: ${filters.minBounty}
+            Min: ₦{filters.minBounty.toLocaleString()}
             <button
               onClick={() => onFiltersChange({ ...filters, minBounty: 0 })}
               className="ml-1 hover:text-destructive"
@@ -275,7 +275,7 @@ export function BrowseFilters({
         )}
         {filters.maxBounty < 10000 && (
           <Badge variant="secondary" className="gap-1">
-            Max: ${filters.maxBounty}
+            Max: ₦{filters.maxBounty.toLocaleString()}
             <button
               onClick={() => onFiltersChange({ ...filters, maxBounty: 10000 })}
               className="ml-1 hover:text-destructive"

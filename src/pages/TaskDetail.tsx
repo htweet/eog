@@ -195,35 +195,39 @@ export default function TaskDetail() {
 
     setClaiming(true);
 
-    const { error } = await supabase
-      .from("tasks")
-      .update({ voucher_id: user.id, status: "assigned" })
-      .eq("id", task.id)
-      .eq("status", "open");
+    try {
+      // Use secure RPC function for atomic task claiming
+      const { data, error } = await supabase.rpc('claim_task_secure', {
+        p_task_id: task.id
+      });
 
-    if (error) {
+      const result = data as { success?: boolean; error?: string } | null;
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to claim task. Please try again.",
+          variant: "destructive",
+        });
+      } else if (result?.success) {
+        toast({
+          title: "Task claimed!",
+          description: "You can now proceed with the verification",
+        });
+        fetchTask();
+      } else {
+        toast({
+          title: "Error",
+          description: result?.error || "Failed to claim task. It may have been claimed by someone else.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
       toast({
         title: "Error",
-        description: "Failed to claim task. It may have been claimed by someone else.",
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
-    } else {
-      // Notify the requester that their task was claimed
-      await supabase
-        .from("notifications")
-        .insert({
-          user_id: task.requester_id,
-          type: "task_claimed",
-          title: "Task Claimed",
-          message: `A voucher has claimed your task "${task.title}"`,
-          task_id: task.id,
-        });
-
-      toast({
-        title: "Task claimed!",
-        description: "You can now proceed with the verification",
-      });
-      fetchTask();
     }
 
     setClaiming(false);
@@ -306,8 +310,8 @@ export default function TaskDetail() {
               </div>
               <div className="text-right">
                 <div className="flex items-center gap-1 text-2xl font-bold text-primary">
-                  <DollarSign className="h-6 w-6" />
-                  {task.bounty_amount.toFixed(2)}
+                  <span className="text-lg">₦</span>
+                  {task.bounty_amount.toLocaleString()}
                 </div>
                 <p className="text-sm text-muted-foreground">Bounty</p>
               </div>
