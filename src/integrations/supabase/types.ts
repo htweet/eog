@@ -14,6 +14,119 @@ export type Database = {
   }
   public: {
     Tables: {
+      dispute_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          sender_id: string
+          sender_type: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          sender_id: string
+          sender_type: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          sender_id?: string
+          sender_type?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispute_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispute_messages_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      disputes: {
+        Row: {
+          created_at: string | null
+          evidence_urls: Json | null
+          id: string
+          reason: string
+          requester_id: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          task_id: string
+          voucher_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          evidence_urls?: Json | null
+          id?: string
+          reason: string
+          requester_id: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          task_id: string
+          voucher_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          evidence_urls?: Json | null
+          id?: string
+          reason?: string
+          requester_id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          task_id?: string
+          voucher_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disputes_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       escrow_transactions: {
         Row: {
           amount: number
@@ -138,6 +251,58 @@ export type Database = {
             columns: ["voucher_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          receiver_id: string
+          sender_id: string
+          task_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          receiver_id: string
+          sender_id: string
+          task_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          receiver_id?: string
+          sender_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
         ]
@@ -739,6 +904,54 @@ export type Database = {
           },
         ]
       }
+      voucher_checkins: {
+        Row: {
+          checked_in_at: string | null
+          distance_from_task: number | null
+          id: string
+          latitude: number
+          longitude: number
+          status: string
+          task_id: string
+          voucher_id: string
+        }
+        Insert: {
+          checked_in_at?: string | null
+          distance_from_task?: number | null
+          id?: string
+          latitude: number
+          longitude: number
+          status?: string
+          task_id: string
+          voucher_id: string
+        }
+        Update: {
+          checked_in_at?: string | null
+          distance_from_task?: number | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          status?: string
+          task_id?: string
+          voucher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voucher_checkins_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voucher_checkins_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       withdrawal_settings: {
         Row: {
           account_name: string | null
@@ -1165,6 +1378,15 @@ export type Database = {
       }
       release_escrow: {
         Args: { p_admin_id?: string; p_task_id: string; p_voucher_id: string }
+        Returns: Json
+      }
+      request_withdrawal_secure: {
+        Args: {
+          p_account_name: string
+          p_account_number: string
+          p_amount: number
+          p_bank_name: string
+        }
         Returns: Json
       }
       st_3dclosestpoint: {
@@ -1758,6 +1980,15 @@ export type Database = {
           table_name: string
         }
         Returns: string
+      }
+      verify_checkin: {
+        Args: {
+          p_latitude: number
+          p_longitude: number
+          p_max_distance_meters?: number
+          p_task_id: string
+        }
+        Returns: Json
       }
       verify_team_member_pin: {
         Args: { p_pin_code: string; p_team_member_id: string }

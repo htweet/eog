@@ -90,50 +90,82 @@ export default function Profile() {
     if (!event.target.files || !event.target.files[0] || !user) return;
     
     const file = event.target.files[0];
-    const fileExt = file.name.split(".").pop();
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image under 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const fileExt = file.name.split(".").pop()?.toLowerCase() || 'jpg';
     const filePath = `${user.id}/avatar.${fileExt}`;
 
     setUploading(true);
 
-    // Upload to storage
-    const { error: uploadError } = await supabase.storage
-      .from("verification-videos")
-      .upload(filePath, file, { upsert: true });
+    try {
+      // Upload to avatars bucket
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
 
-    if (uploadError) {
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        toast({
+          title: "Error",
+          description: uploadError.message || "Failed to upload avatar",
+          variant: "destructive",
+        });
+        setUploading(false);
+        return;
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      // Update profile
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: urlData.publicUrl })
+        .eq("id", user.id);
+
+      if (updateError) {
+        toast({
+          title: "Error",
+          description: "Failed to update profile",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Avatar updated successfully",
+        });
+        fetchProfile();
+      }
+    } catch (err: any) {
+      console.error("Avatar upload error:", err);
       toast({
         title: "Error",
-        description: "Failed to upload avatar",
+        description: err.message || "Failed to upload avatar",
         variant: "destructive",
       });
-      setUploading(false);
-      return;
     }
-
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from("verification-videos")
-      .getPublicUrl(filePath);
-
-    // Update profile
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ avatar_url: urlData.publicUrl })
-      .eq("id", user.id);
-
-    if (updateError) {
-      toast({
-        title: "Error",
-        description: "Failed to update avatar",
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: "Avatar updated successfully",
-      });
-      fetchProfile();
-    }
+    
     setUploading(false);
   };
 
@@ -231,7 +263,7 @@ export default function Profile() {
                   <div>
                     <p className="text-sm text-muted-foreground">Wallet Balance</p>
                     <p className="text-2xl font-bold text-foreground">
-                      ${profile?.wallet_balance?.toFixed(2) || "0.00"}
+                      ₦{profile?.wallet_balance?.toLocaleString() || "0"}
                     </p>
                   </div>
                 </div>

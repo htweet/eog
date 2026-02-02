@@ -58,25 +58,42 @@ export function AdminManagement() {
 
   const fetchUsers = async () => {
     try {
-      const { data: roles, error } = await supabase
+      // Fetch user roles first
+      const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
-        .select(`
-          id,
-          user_id,
-          role,
-          profiles:user_id (
-            full_name
-          )
-        `);
+        .select('id, user_id, role');
 
-      if (error) throw error;
+      if (rolesError) throw rolesError;
 
-      // Get unique user IDs and fetch their profiles
-      const userRoles = (roles || []).map((r: any) => ({
+      if (!roles || roles.length === 0) {
+        setUsers([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get unique user IDs
+      const userIds = [...new Set(roles.map(r => r.user_id))];
+
+      // Fetch profiles separately
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Create profile lookup map
+      const profileMap = (profiles || []).reduce((acc, p) => {
+        acc[p.id] = p;
+        return acc;
+      }, {} as Record<string, { id: string; full_name: string | null }>);
+
+      // Combine roles with profiles
+      const userRoles = roles.map((r) => ({
         id: r.id,
         user_id: r.user_id,
-        role: r.role,
-        full_name: r.profiles?.full_name || 'Unknown User'
+        role: r.role as 'requester' | 'voucher' | 'admin',
+        full_name: profileMap[r.user_id]?.full_name || 'Unknown User'
       }));
 
       setUsers(userRoles);
