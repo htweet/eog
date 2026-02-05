@@ -509,6 +509,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_role: string | null
           avatar_url: string | null
           bio: string | null
           company_details: Json | null
@@ -526,6 +527,7 @@ export type Database = {
           withdrawable_balance: number | null
         }
         Insert: {
+          active_role?: string | null
           avatar_url?: string | null
           bio?: string | null
           company_details?: Json | null
@@ -543,6 +545,7 @@ export type Database = {
           withdrawable_balance?: number | null
         }
         Update: {
+          active_role?: string | null
           avatar_url?: string | null
           bio?: string | null
           company_details?: Json | null
@@ -1129,6 +1132,7 @@ export type Database = {
         Args: { p_amount: number; p_description?: string }
         Returns: Json
       }
+      add_user_role: { Args: { p_role: string }; Returns: Json }
       addauth: { Args: { "": string }; Returns: boolean }
       addgeometrycolumn:
         | {
@@ -1312,6 +1316,7 @@ export type Database = {
       get_escrow_summary: { Args: { p_task_id: string }; Returns: Json }
       get_public_profile: { Args: { p_user_id: string }; Returns: Json }
       get_task_location: { Args: { p_task_id: string }; Returns: Json }
+      get_user_roles: { Args: never; Returns: Json }
       get_verification_video_url: {
         Args: { p_task_id: string }
         Returns: string
@@ -1391,6 +1396,7 @@ export type Database = {
         }
         Returns: Json
       }
+      set_active_role: { Args: { p_role: string }; Returns: Json }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown
