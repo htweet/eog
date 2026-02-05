@@ -49,7 +49,7 @@ interface AppSettings {
 }
 
 export function useAdmin() {
-  const { user, userRole } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<AdminStats>({
@@ -72,7 +72,7 @@ export function useAdmin() {
     escrowEnabled: true,
   });
 
-  const isAdmin = userRole === 'admin';
+  // Now isAdmin comes from useAuth which checks if user has admin role in allRoles
 
   useEffect(() => {
     if (user && isAdmin) {

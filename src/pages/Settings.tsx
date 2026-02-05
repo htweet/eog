@@ -17,7 +17,7 @@ import { RoleSwitcher } from "@/components/settings/RoleSwitcher";
 import { WithdrawalSettings } from "@/components/settings/WithdrawalSettings";
 
 export default function Settings() {
-  const { user, userRole } = useAuth();
+  const { user, userRole, allRoles } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState({
@@ -212,7 +212,11 @@ export default function Settings() {
                 <RefreshCw className="w-5 h-5" />
                 Role Management
               </CardTitle>
-              <CardDescription>Switch between roles or add new ones</CardDescription>
+              <CardDescription>
+                {allRoles.length > 1 
+                  ? `You have ${allRoles.length} roles. Switch between them or add more.`
+                  : "Add additional roles to access more features"}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <RoleSwitcher />

@@ -236,7 +236,7 @@ export default function ReviewTask() {
             user_id: task.voucher_id,
             type: "payment_received",
             title: "Payment Received!",
-            message: `You earned $${task.bounty_amount} for completing "${task.title}"`,
+            message: `You earned ₦${task.bounty_amount.toLocaleString()} for completing "${task.title}"`,
             task_id: task.id,
           });
 
@@ -253,7 +253,7 @@ export default function ReviewTask() {
 
       toast({
         title: "Task approved!",
-        description: `The voucher has been paid $${task.bounty_amount}`,
+        description: `The voucher has been paid ₦${task.bounty_amount.toLocaleString()}`,
       });
 
       navigate(`/task/${task.id}`);

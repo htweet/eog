@@ -164,7 +164,7 @@ export default function Admin() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${stats.totalBountyPaid.toFixed(2)}</div>
+              <div className="text-2xl font-bold">₦{stats.totalBountyPaid.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">{stats.totalTransactions} transactions</p>
             </CardContent>
           </Card>
@@ -376,7 +376,7 @@ export default function Admin() {
                             {task.title}
                           </TableCell>
                           <TableCell className="capitalize">{task.category}</TableCell>
-                          <TableCell>${task.bounty_amount}</TableCell>
+                          <TableCell>₦{task.bounty_amount.toLocaleString()}</TableCell>
                           <TableCell>{getStatusBadge(task.status)}</TableCell>
                           <TableCell className="text-muted-foreground">
                             {new Date(task.created_at).toLocaleDateString()}
@@ -439,7 +439,7 @@ export default function Admin() {
                             </Badge>
                           </TableCell>
                           <TableCell>{userItem.trust_score?.toFixed(1) || "5.0"}</TableCell>
-                          <TableCell>${userItem.wallet_balance?.toFixed(2) || "0.00"}</TableCell>
+                          <TableCell>₦{(userItem.wallet_balance || 0).toLocaleString()}</TableCell>
                           <TableCell>
                             {userItem.is_verified ? (
                               <Badge className="bg-green-500/10 text-green-500">Verified</Badge>

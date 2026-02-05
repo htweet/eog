@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import {
@@ -14,83 +12,110 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { RefreshCw, Users, Briefcase, Loader2, CheckCircle, ArrowRight } from "lucide-react";
+import { 
+  Users, 
+  Briefcase, 
+  Loader2, 
+  CheckCircle, 
+  Plus,
+  Shield,
+  ArrowRight
+} from "lucide-react";
 
-type AppRole = "requester" | "voucher";
+type AppRole = "requester" | "voucher" | "admin";
+
+const roleInfo = {
+  requester: {
+    icon: <Briefcase className="h-5 w-5" />,
+    title: "Requester",
+    description: "Post verification tasks and pay vouchers",
+    color: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+    benefits: [
+      "Create verification requests",
+      "Watch live streams from vouchers",
+      "Review and approve submissions",
+      "Escrow-protected payments",
+    ],
+  },
+  voucher: {
+    icon: <Users className="h-5 w-5" />,
+    title: "Voucher",
+    description: "Complete tasks and earn bounties",
+    color: "bg-green-500/10 text-green-600 border-green-500/20",
+    benefits: [
+      "Browse available tasks in your area",
+      "Stream live verifications",
+      "Earn bounties for completed work",
+      "Build your trust score",
+    ],
+  },
+  admin: {
+    icon: <Shield className="h-5 w-5" />,
+    title: "Admin",
+    description: "Manage platform and resolve disputes",
+    color: "bg-purple-500/10 text-purple-600 border-purple-500/20",
+    benefits: [
+      "Access admin dashboard",
+      "Resolve disputes",
+      "Manage users and payouts",
+      "View platform analytics",
+    ],
+  },
+};
 
 export function RoleSwitcher() {
-  const { user, userRole } = useAuth();
+  const { userRole, allRoles, isAdmin, switchRole, addRole } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [targetRole, setTargetRole] = useState<AppRole | null>(null);
-  const [hasMultipleRoles, setHasMultipleRoles] = useState(false);
-  const [allRoles, setAllRoles] = useState<string[]>([]);
+  const [isAddingNew, setIsAddingNew] = useState(false);
 
-  // Check if user already has multiple roles
-  const checkExistingRoles = async () => {
-    if (!user) return;
-    
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id);
-    
-    if (data) {
-      const roles = data.map(r => r.role);
-      setAllRoles(roles);
-      setHasMultipleRoles(roles.length > 1);
-    }
-  };
-
-  const initiateRoleSwitch = async (newRole: AppRole) => {
-    await checkExistingRoles();
-    setTargetRole(newRole);
+  const handleRoleAction = async (role: AppRole, isNew: boolean) => {
+    setTargetRole(role);
+    setIsAddingNew(isNew);
     setDialogOpen(true);
   };
 
-  const handleRoleSwitch = async () => {
-    if (!user || !targetRole) return;
+  const confirmRoleAction = async () => {
+    if (!targetRole) return;
     
     setLoading(true);
 
     try {
-      // Check if user already has this role
-      const { data: existingRole } = await supabase
-        .from("user_roles")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("role", targetRole)
-        .single();
-
-      if (!existingRole) {
-        // Add the new role
-        const { error } = await supabase
-          .from("user_roles")
-          .insert({ user_id: user.id, role: targetRole });
-
-        if (error) throw error;
+      let result;
+      if (isAddingNew) {
+        result = await addRole(targetRole);
+      } else {
+        result = await switchRole(targetRole);
       }
 
-      toast.success(`Switched to ${targetRole} role!`, {
-        description: "Redirecting to your new dashboard...",
-      });
+      if (result.error) {
+        throw result.error;
+      }
+
+      toast.success(
+        isAddingNew 
+          ? `Added ${targetRole} role!` 
+          : `Switched to ${targetRole}!`,
+        { description: "Redirecting to your dashboard..." }
+      );
 
       setDialogOpen(false);
 
       // Navigate to appropriate dashboard
       setTimeout(() => {
-        if (targetRole === "voucher") {
+        if (targetRole === "admin") {
+          navigate("/admin");
+        } else if (targetRole === "voucher") {
           navigate("/dashboard/voucher");
         } else {
           navigate("/dashboard/requester");
         }
-        // Force page reload to refresh auth context
-        window.location.reload();
-      }, 1000);
+      }, 500);
     } catch (error: any) {
-      console.error("Role switch error:", error);
-      toast.error("Failed to switch role", {
+      console.error("Role action error:", error);
+      toast.error("Failed to update role", {
         description: error.message,
       });
     } finally {
@@ -98,138 +123,163 @@ export function RoleSwitcher() {
     }
   };
 
-  const roleInfo = {
-    requester: {
-      icon: <Briefcase className="h-6 w-6" />,
-      title: "Requester",
-      description: "Post verification tasks and pay vouchers",
-      benefits: [
-        "Create verification requests",
-        "Watch live streams from vouchers",
-        "Review and approve submissions",
-        "Escrow-protected payments",
-      ],
-    },
-    voucher: {
-      icon: <Users className="h-6 w-6" />,
-      title: "Voucher",
-      description: "Complete tasks and earn bounties",
-      benefits: [
-        "Browse available tasks in your area",
-        "Stream live verifications",
-        "Earn bounties for completed work",
-        "Build your trust score",
-      ],
-    },
-  };
-
-  const currentRoleInfo = userRole && userRole !== "admin" ? roleInfo[userRole as AppRole] : null;
-  const otherRole: AppRole = userRole === "requester" ? "voucher" : "requester";
-  const otherRoleInfo = roleInfo[otherRole];
+  const availableRoles: AppRole[] = ["requester", "voucher"];
+  const rolesToShow = isAdmin ? [...availableRoles, "admin" as AppRole] : availableRoles;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <RefreshCw className="h-5 w-5" />
-          Role Management
-        </CardTitle>
-        <CardDescription>
-          Switch between requester and voucher roles
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Current Role */}
-        {currentRoleInfo && (
-          <div className="p-4 rounded-lg border bg-primary/5 border-primary/20">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                {currentRoleInfo.icon}
+    <div className="space-y-4">
+      {/* Current Active Role */}
+      {userRole && (
+        <div className="mb-6">
+          <p className="text-sm text-muted-foreground mb-2">Active Role</p>
+          <div className={`p-4 rounded-lg border-2 ${roleInfo[userRole]?.color || ''} bg-card`}>
+            <div className="flex items-center gap-3">
+              <div className={`h-10 w-10 rounded-full flex items-center justify-center ${roleInfo[userRole]?.color || ''}`}>
+                {roleInfo[userRole]?.icon}
               </div>
-              <div>
+              <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-semibold">{currentRoleInfo.title}</h3>
-                  <Badge variant="outline" className="bg-primary/10 text-primary">
-                    Current
+                  <h3 className="font-semibold">{roleInfo[userRole]?.title}</h3>
+                  <Badge variant="outline" className="bg-primary/10 text-primary text-xs">
+                    Active
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground">{currentRoleInfo.description}</p>
+                <p className="text-sm text-muted-foreground">{roleInfo[userRole]?.description}</p>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Switch Option */}
-        <div className="p-4 rounded-lg border hover:border-primary/50 transition-colors">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                {otherRoleInfo.icon}
-              </div>
-              <div>
-                <h3 className="font-semibold">{otherRoleInfo.title}</h3>
-                <p className="text-sm text-muted-foreground">{otherRoleInfo.description}</p>
-              </div>
-            </div>
-            <Button 
-              onClick={() => initiateRoleSwitch(otherRole)}
-              disabled={loading}
-            >
-              Switch
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-          <div className="mt-4 pl-13 space-y-2">
-            {otherRoleInfo.benefits.map((benefit, idx) => (
-              <div key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CheckCircle className="h-4 w-4 text-primary" />
-                {benefit}
-              </div>
-            ))}
           </div>
         </div>
+      )}
 
-        {/* Info */}
-        <p className="text-xs text-muted-foreground">
-          You can have both roles simultaneously. Switching roles will take you to the respective dashboard.
+      {/* All Available Roles */}
+      <div>
+        <p className="text-sm text-muted-foreground mb-2">
+          {allRoles.length > 1 ? "Switch Role" : "Add Another Role"}
         </p>
-      </CardContent>
+        <div className="space-y-3">
+          {rolesToShow.map((role) => {
+            const info = roleInfo[role];
+            const hasRole = allRoles.includes(role);
+            const isActive = userRole === role;
+
+            if (isActive) return null; // Don't show active role again
+
+            return (
+              <div
+                key={role}
+                className={`p-4 rounded-lg border transition-all ${
+                  hasRole 
+                    ? 'hover:border-primary/50 cursor-pointer' 
+                    : 'border-dashed hover:border-primary/30'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                      hasRole ? info.color : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {info.icon}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold">{info.title}</h3>
+                        {hasRole && (
+                          <Badge variant="outline" className="text-xs">
+                            Available
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{info.description}</p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => handleRoleAction(role, !hasRole)}
+                    variant={hasRole ? "default" : "outline"}
+                    size="sm"
+                    disabled={loading || (role === "admin" && !isAdmin)}
+                  >
+                    {hasRole ? (
+                      <>
+                        Switch <ArrowRight className="ml-1 h-4 w-4" />
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="mr-1 h-4 w-4" /> Add Role
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Benefits preview for new roles */}
+                {!hasRole && role !== "admin" && (
+                  <div className="mt-3 pl-13 grid grid-cols-2 gap-2">
+                    {info.benefits.slice(0, 2).map((benefit, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <CheckCircle className="h-3 w-3 text-primary flex-shrink-0" />
+                        <span className="truncate">{benefit}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Info Text */}
+      <p className="text-xs text-muted-foreground pt-2">
+        You can have multiple roles. Your active role determines which dashboard you see by default.
+        Role preferences are saved to your account.
+      </p>
 
       {/* Confirmation Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Switch to {targetRole} Role</DialogTitle>
+            <DialogTitle>
+              {isAddingNew ? `Add ${targetRole} Role` : `Switch to ${targetRole}`}
+            </DialogTitle>
             <DialogDescription>
-              {allRoles.includes(targetRole || "") 
-                ? `You already have the ${targetRole} role. We'll switch your active view to that dashboard.`
-                : `This will add the ${targetRole} role to your account. You'll be able to switch between roles anytime.`}
+              {isAddingNew
+                ? `This will add the ${targetRole} role to your account. You can switch between roles anytime.`
+                : `Switch your active view to the ${targetRole} dashboard.`}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <div className="p-4 rounded-lg bg-muted">
-              <h4 className="font-medium mb-2">As a {targetRole}, you can:</h4>
-              <ul className="space-y-2">
-                {targetRole && roleInfo[targetRole].benefits.map((benefit, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-sm">
-                    <CheckCircle className="h-4 w-4 text-primary" />
-                    {benefit}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {targetRole && (
+              <div className={`p-4 rounded-lg ${roleInfo[targetRole].color}`}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${roleInfo[targetRole].color}`}>
+                    {roleInfo[targetRole].icon}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">{roleInfo[targetRole].title}</h4>
+                    <p className="text-sm opacity-80">{roleInfo[targetRole].description}</p>
+                  </div>
+                </div>
+                <ul className="space-y-2">
+                  {roleInfo[targetRole].benefits.map((benefit, idx) => (
+                    <li key={idx} className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                      {benefit}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={loading}>
               Cancel
             </Button>
-            <Button onClick={handleRoleSwitch} disabled={loading}>
+            <Button onClick={confirmRoleAction} disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Confirm Switch
+              {isAddingNew ? "Add Role" : "Switch"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Card>
+    </div>
   );
 }
