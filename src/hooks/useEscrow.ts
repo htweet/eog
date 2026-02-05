@@ -154,16 +154,51 @@ export function useEscrow() {
     }
   };
 
+  // SECURE: Uses RPC function that hides platform_fee from vouchers
   const getEscrowStatus = async (taskId: string): Promise<EscrowTransaction | null> => {
-    const { data } = await supabase
-      .from("escrow_transactions")
-      .select("*")
-      .eq("task_id", taskId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const { data, error } = await supabase.rpc("get_escrow_summary", {
+      p_task_id: taskId,
+    });
 
-    return data as EscrowTransaction | null;
+    if (error || !data) {
+      return null;
+    }
+
+    // Cast to expected shape
+    const result = data as {
+      success?: boolean;
+      id?: string;
+      task_id?: string;
+      requester_id?: string;
+      voucher_id?: string;
+      amount?: number;
+      estimated_payout?: number;
+      platform_fee?: number;
+      status?: string;
+      held_at?: string;
+      released_at?: string;
+      refunded_at?: string;
+      notes?: string;
+    };
+
+    if (!result.success) {
+      return null;
+    }
+
+    // Map the RPC response to EscrowTransaction interface
+    return {
+      id: result.id || "",
+      task_id: result.task_id || "",
+      requester_id: result.requester_id || "",
+      voucher_id: result.voucher_id || null,
+      amount: result.amount || result.estimated_payout || 0,
+      platform_fee: result.platform_fee || 0,
+      status: (result.status || "held") as 'held' | 'released' | 'refunded' | 'disputed',
+      held_at: result.held_at || "",
+      released_at: result.released_at || null,
+      refunded_at: result.refunded_at || null,
+      notes: result.notes || null,
+    } as EscrowTransaction;
   };
 
   const calculateProFee = (baseAmount: number): number => {
