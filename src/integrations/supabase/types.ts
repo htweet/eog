@@ -1309,7 +1309,9 @@ export type Database = {
         Returns: boolean
       }
       geomfromewkt: { Args: { "": string }; Returns: unknown }
+      get_escrow_summary: { Args: { p_task_id: string }; Returns: Json }
       get_public_profile: { Args: { p_user_id: string }; Returns: Json }
+      get_task_location: { Args: { p_task_id: string }; Returns: Json }
       get_verification_video_url: {
         Args: { p_task_id: string }
         Returns: string

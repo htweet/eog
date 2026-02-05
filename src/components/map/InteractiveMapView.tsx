@@ -5,7 +5,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Navigation, DollarSign, X, Loader2, AlertCircle } from "lucide-react";
+import { MapPin, Navigation, X, Loader2, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface Task {
@@ -183,7 +183,7 @@ export function InteractiveMapView({ tasks, userLocation }: InteractiveMapViewPr
           font-size: 11px;
           font-weight: bold;
           box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-        ">$${task.bounty_amount}</div>
+        ">₦${task.bounty_amount.toLocaleString()}</div>
       `;
 
       el.addEventListener("mouseenter", () => {
@@ -416,8 +416,8 @@ export function InteractiveMapView({ tasks, userLocation }: InteractiveMapViewPr
                   {selectedTask.address}
                 </p>
                 <div className="flex items-center gap-1 mt-2 text-lg font-bold text-primary">
-                  <DollarSign className="h-5 w-5" />
-                  {selectedTask.bounty_amount.toFixed(2)}
+                  <span className="text-base">₦</span>
+                  {selectedTask.bounty_amount.toLocaleString()}
                 </div>
               </div>
               <div className="flex flex-col gap-2">
