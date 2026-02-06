@@ -11,6 +11,7 @@ import { ProOpportunitiesSection } from "@/components/voucher/ProOpportunitiesSe
 import { MapPin, DollarSign, Star, CheckCircle, Clock, Briefcase, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useRealtimeTaskNotifications } from "@/hooks/useRealtimeTaskNotifications";
+import { PushPermissionBanner } from "@/components/notifications/PushPermissionBanner";
 
 interface Task {
   id: string;
@@ -128,7 +129,8 @@ export function VoucherDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Section */}
+      {/* Push Notification Banner */}
+      <PushPermissionBanner />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Voucher Dashboard</h1>

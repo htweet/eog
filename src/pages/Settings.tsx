@@ -15,9 +15,11 @@ import { toast } from "sonner";
 import { User, Bell, Shield, Palette, Save, Loader2, Camera, Wallet, RefreshCw } from "lucide-react";
 import { RoleSwitcher } from "@/components/settings/RoleSwitcher";
 import { WithdrawalSettings } from "@/components/settings/WithdrawalSettings";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export default function Settings() {
   const { user, userRole, allRoles } = useAuth();
+  const { isSupported, isGranted, requestPermission } = usePushNotifications();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState({
@@ -254,13 +256,19 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Push Notifications</Label>
-                  <p className="text-sm text-muted-foreground">Receive browser notifications</p>
+                  <p className="text-sm text-muted-foreground">
+                    {isGranted ? "Browser notifications enabled" : "Enable browser notifications"}
+                  </p>
                 </div>
                 <Switch
-                  checked={notifications.push_notifications}
-                  onCheckedChange={(checked) => 
-                    setNotifications(prev => ({ ...prev, push_notifications: checked }))
-                  }
+                  checked={isGranted}
+                  onCheckedChange={async (checked) => {
+                    if (checked && isSupported) {
+                      await requestPermission();
+                    }
+                    setNotifications(prev => ({ ...prev, push_notifications: checked }));
+                  }}
+                  disabled={!isSupported || isGranted}
                 />
               </div>
               <Separator />
