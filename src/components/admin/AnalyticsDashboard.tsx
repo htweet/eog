@@ -188,7 +188,7 @@ export function AnalyticsDashboard() {
             <DollarSign className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${data.metrics.avgBounty.toFixed(2)}</div>
+            <div className="text-2xl font-bold">₦{data.metrics.avgBounty.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Per task</p>
           </CardContent>
         </Card>

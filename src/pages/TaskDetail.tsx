@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { TaskCompletionBanner } from "@/components/task/TaskCompletionBanner";
 import { ReviewsList } from "@/components/review/ReviewsList";
 import { WebRTCStream } from "@/components/streaming/WebRTCStream";
+import { TaskChat } from "@/components/chat/TaskChat";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft,
@@ -516,6 +517,17 @@ export default function TaskDetail() {
               )}
             </CardContent>
           </Card>
+        )}
+
+        {/* Chat Section - available when task has a voucher assigned */}
+        {(task.status === "assigned" || task.status === "pending_review") && (isRequester || isVoucher) && (
+          <div className="mt-6">
+            <TaskChat
+              taskId={task.id}
+              otherUserId={isRequester ? task.voucher_id : task.requester_id}
+              otherUserName={isRequester ? voucher?.full_name || "Voucher" : requester?.full_name || "Requester"}
+            />
+          </div>
         )}
 
         {/* Reviews Section (for completed tasks) */}
