@@ -20,7 +20,6 @@ import {
   Send,
   Loader2,
   MapPin,
-  DollarSign,
   Radio,
 } from "lucide-react";
 
@@ -266,8 +265,8 @@ export default function VerifyTask() {
               </div>
               <div className="text-right shrink-0">
                 <div className="flex items-center gap-1 text-xl font-bold text-primary">
-                  <DollarSign className="h-5 w-5" />
-                  {task.bounty_amount.toFixed(2)}
+                  <span className="text-lg">₦</span>
+                  {task.bounty_amount.toLocaleString()}
                 </div>
               </div>
             </div>
