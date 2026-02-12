@@ -194,40 +194,27 @@ export default function ReviewTask() {
 
       if (reviewError) throw reviewError;
 
-      // Update voucher's wallet balance and trust score
+      // Release escrow to voucher using secure RPC
       if (task.voucher_id) {
-        const { data: voucherProfile } = await supabase
-          .from("profiles")
-          .select("wallet_balance, trust_score")
-          .eq("id", task.voucher_id)
-          .single();
+        const { data: escrowResult, error: escrowError } = await supabase.rpc("release_escrow", {
+          p_task_id: task.id,
+          p_voucher_id: task.voucher_id,
+        });
 
-        if (voucherProfile) {
-          const newBalance = (voucherProfile.wallet_balance || 0) + task.bounty_amount;
-          // Simple trust score adjustment based on rating
-          const trustAdjustment = (rating - 3) * 0.1;
-          const newTrustScore = Math.max(0, Math.min(10, (voucherProfile.trust_score || 5) + trustAdjustment));
-
+        if (escrowError) {
+          console.warn("Escrow release failed, falling back to manual transfer:", escrowError);
+          // Fallback: create transaction record manually
           await supabase
-            .from("profiles")
-            .update({
-              wallet_balance: newBalance,
-              trust_score: newTrustScore,
-            })
-            .eq("id", task.voucher_id);
+            .from("transactions")
+            .insert({
+              user_id: task.voucher_id,
+              task_id: task.id,
+              type: "bounty_earned",
+              amount: task.bounty_amount,
+              status: "completed",
+              description: `Bounty earned for task: ${task.title}`,
+            });
         }
-
-        // Create transaction record for bounty earned
-        await supabase
-          .from("transactions")
-          .insert({
-            user_id: task.voucher_id,
-            task_id: task.id,
-            type: "bounty_earned",
-            amount: task.bounty_amount,
-            status: "completed",
-            description: `Bounty earned for task: ${task.title}`,
-          });
 
         // Create notifications for voucher
         await supabase
@@ -397,8 +384,8 @@ export default function ReviewTask() {
               </div>
               <div className="text-right">
                 <div className="flex items-center gap-1 text-2xl font-bold text-primary">
-                  <DollarSign className="h-6 w-6" />
-                  {task.bounty_amount.toFixed(2)}
+                  <span className="text-lg">₦</span>
+                  {task.bounty_amount.toLocaleString()}
                 </div>
                 <p className="text-sm text-muted-foreground">Bounty</p>
               </div>

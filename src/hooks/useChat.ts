@@ -100,12 +100,16 @@ export function useChat(taskId: string, otherUserId: string | null) {
       .eq("is_read", false);
   }, [user, taskId]);
 
-  // Set up realtime subscription
+  // Fetch profiles and messages on mount
   useEffect(() => {
     if (!taskId || !user) return;
-
     fetchProfiles();
     fetchMessages();
+  }, [taskId, user, otherUserId]);
+
+  // Set up realtime subscription (separate effect to avoid re-renders)
+  useEffect(() => {
+    if (!taskId || !user) return;
 
     let retryTimeout: NodeJS.Timeout | null = null;
 
@@ -121,8 +125,6 @@ export function useChat(taskId: string, otherUserId: string | null) {
         },
         (payload) => {
           const newMsg = payload.new as Message;
-          newMsg.sender_name = profiles[newMsg.sender_id]?.full_name || "Unknown";
-          newMsg.sender_avatar = profiles[newMsg.sender_id]?.avatar_url || undefined;
           setMessages((prev) => [...prev, newMsg]);
           
           // Mark as read if received
@@ -146,7 +148,7 @@ export function useChat(taskId: string, otherUserId: string | null) {
       if (retryTimeout) clearTimeout(retryTimeout);
       supabase.removeChannel(channel);
     };
-  }, [taskId, user, fetchProfiles, fetchMessages, markAsRead, profiles]);
+  }, [taskId, user]);
 
   return {
     messages,

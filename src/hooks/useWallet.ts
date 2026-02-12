@@ -126,7 +126,7 @@ export function useWallet() {
     }
 
     try {
-      const { data, error } = await supabase.rpc("withdraw_funds_secure", {
+      const { data, error } = await supabase.rpc("request_withdrawal_secure", {
         p_amount: amount,
         p_bank_name: bankName,
         p_account_number: accountNumber,
