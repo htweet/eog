@@ -66,6 +66,8 @@ const navSections = [
     items: [
       { id: "escrow", label: "Escrow", icon: Lock },
       { id: "payouts", label: "Payouts", icon: Banknote },
+      { id: "funds", label: "Fund Deposits", icon: ArrowLeftRight },
+      { id: "pricing", label: "Pricing Plans", icon: Crown },
     ],
   },
   {
