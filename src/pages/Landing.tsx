@@ -5,6 +5,7 @@ import { CategoriesSection } from "@/components/CategoriesSection";
 import { ActiveBountiesSection } from "@/components/ActiveBountiesSection";
 import { HowItWorksSection } from "@/components/HowItWorksSection";
 import { RecentVerifications } from "@/components/home/RecentVerifications";
+import { PricingSection } from "@/components/landing/PricingSection";
 import { Shield, CheckCircle, Video, Wallet, ArrowRight } from "lucide-react";
 
 export default function Landing() {
@@ -98,8 +99,11 @@ export default function Landing() {
           <HowItWorksSection />
         </div>
 
+        {/* Pricing Section */}
+        <PricingSection />
+
         {/* CTA Section */}
-        <section id="pricing" className="py-20 bg-primary text-primary-foreground">
+        <section className="py-20 bg-primary text-primary-foreground">
           <div className="container text-center">
             <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
             <p className="text-lg opacity-90 mb-8 max-w-xl mx-auto">
