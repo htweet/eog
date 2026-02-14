@@ -27,6 +27,7 @@ import { EscrowManagement } from "@/components/admin/EscrowManagement";
 import { AgencyExplorer } from "@/components/admin/AgencyExplorer";
 import { PricingManagement } from "@/components/admin/PricingManagement";
 import { FundManagement } from "@/components/admin/FundManagement";
+import { BillingManagement } from "@/components/admin/BillingManagement";
 import { DisputeResolution } from "@/components/admin/DisputeResolution";
 import {
   Shield,
@@ -117,6 +118,7 @@ export default function Admin() {
     payouts: { title: "Payouts", description: "Process withdrawal requests" },
     funds: { title: "Fund Deposits", description: "Manage pending fund additions" },
     pricing: { title: "Pricing Plans", description: "Manage landing page pricing" },
+    billing: { title: "User Billing", description: "Manage subscriptions & billing" },
     users: { title: "Users", description: "User management & verification" },
     "pro-validation": { title: "Pro Validation", description: "Review upgrade requests" },
     agencies: { title: "Agencies", description: "Explore registered agencies" },
@@ -179,6 +181,7 @@ export default function Admin() {
               {activeTab === "payouts" && <PayoutManagement />}
               {activeTab === "funds" && <FundManagement />}
               {activeTab === "pricing" && <PricingManagement />}
+              {activeTab === "billing" && <BillingManagement />}
               {activeTab === "pro-validation" && <ProValidation />}
               {activeTab === "agencies" && <AgencyExplorer />}
               {activeTab === "ai-analysis" && <AIVideoAnalysis />}

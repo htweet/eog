@@ -45,6 +45,7 @@ import {
   Briefcase,
   UserCheck,
   ArrowLeftRight,
+  CreditCard,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -68,6 +69,7 @@ const navSections = [
       { id: "payouts", label: "Payouts", icon: Banknote },
       { id: "funds", label: "Fund Deposits", icon: ArrowLeftRight },
       { id: "pricing", label: "Pricing Plans", icon: Crown },
+      { id: "billing", label: "User Billing", icon: CreditCard },
     ],
   },
   {

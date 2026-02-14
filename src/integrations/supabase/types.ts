@@ -501,6 +501,12 @@ export type Database = {
           created_at: string | null
           document_urls: Json | null
           id: string
+          kyc_address: string | null
+          kyc_id_number: string | null
+          kyc_id_type: string | null
+          kyc_notes: string | null
+          kyc_status: string | null
+          kyc_verified_at: string | null
           registration_number: string
           rejection_reason: string | null
           reviewed_at: string | null
@@ -514,6 +520,12 @@ export type Database = {
           created_at?: string | null
           document_urls?: Json | null
           id?: string
+          kyc_address?: string | null
+          kyc_id_number?: string | null
+          kyc_id_type?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          kyc_verified_at?: string | null
           registration_number: string
           rejection_reason?: string | null
           reviewed_at?: string | null
@@ -527,6 +539,12 @@ export type Database = {
           created_at?: string | null
           document_urls?: Json | null
           id?: string
+          kyc_address?: string | null
+          kyc_id_number?: string | null
+          kyc_id_type?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          kyc_verified_at?: string | null
           registration_number?: string
           rejection_reason?: string | null
           reviewed_at?: string | null
@@ -907,9 +925,12 @@ export type Database = {
       }
       user_subscriptions: {
         Row: {
+          admin_notes: string | null
+          cancelled_at: string | null
           created_at: string | null
           expires_at: string | null
           id: string
+          payment_reference: string | null
           plan_id: string
           started_at: string
           status: string
@@ -917,9 +938,12 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_notes?: string | null
+          cancelled_at?: string | null
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          payment_reference?: string | null
           plan_id: string
           started_at?: string
           status?: string
@@ -927,9 +951,12 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_notes?: string | null
+          cancelled_at?: string | null
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          payment_reference?: string | null
           plan_id?: string
           started_at?: string
           status?: string
