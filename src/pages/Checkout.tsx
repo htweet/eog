@@ -55,6 +55,18 @@ export default function Checkout() {
         // Store tx_ref for verification later
         localStorage.setItem('pending_tx_ref', data.tx_ref);
         localStorage.setItem('pending_amount', amount);
+
+        // Create a pending deposit transaction so admin can track it
+        if (user) {
+          await supabase.from("transactions").insert({
+            user_id: user.id,
+            type: "deposit",
+            amount: numAmount,
+            status: "pending",
+            description: `Flutterwave deposit - ${data.tx_ref}`,
+          });
+        }
+
         // Redirect to Flutterwave payment page
         window.location.href = data.payment_link;
       } else {

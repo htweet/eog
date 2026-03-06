@@ -121,7 +121,7 @@ const App = () => (
             <Route 
               path="/task/:id/review" 
               element={
-                <ProtectedRoute requiredRole="requester">
+                <ProtectedRoute>
                   <ReviewTask />
                 </ProtectedRoute>
               } 
