@@ -312,7 +312,11 @@ export function AIVideoAnalysis() {
                             {analyzing === v.id ? (<><Loader2 className="h-4 w-4 animate-spin mr-1" />Analyzing...</>) : (<><Brain className="h-4 w-4 mr-1" />{v.ai_analysis_score !== null ? "Re-analyze" : "Analyze"}</>)}
                           </Button>
                           {v.video_url && (
-                            <Button size="sm" variant="ghost" onClick={() => window.open(v.video_url, "_blank")}><Eye className="h-4 w-4 mr-1" />View</Button>
+                            <Button size="sm" variant="ghost" onClick={async () => {
+                              const { getSignedVideoUrl } = await import("@/lib/storageUtils");
+                              const url = await getSignedVideoUrl(v.video_url);
+                              if (url) window.open(url, "_blank");
+                            }}><Eye className="h-4 w-4 mr-1" />View</Button>
                           )}
                         </div>
                       </div>
