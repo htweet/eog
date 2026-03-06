@@ -12,13 +12,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User, Bell, Shield, Palette, Save, Loader2, Camera, Wallet, RefreshCw } from "lucide-react";
+import { User, Bell, Shield, Palette, Save, Loader2, Camera, Wallet, RefreshCw, Building2 } from "lucide-react";
 import { RoleSwitcher } from "@/components/settings/RoleSwitcher";
 import { WithdrawalSettings } from "@/components/settings/WithdrawalSettings";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useNavigate } from "react-router-dom";
 
 export default function Settings() {
   const { user, userRole, allRoles } = useAuth();
+  const navigate = useNavigate();
   const { isSupported, isGranted, requestPermission } = usePushNotifications();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -222,6 +224,23 @@ export default function Settings() {
             </CardHeader>
             <CardContent>
               <RoleSwitcher />
+            </CardContent>
+          </Card>
+
+          {/* Agency Registration CTA */}
+          <Card className="border-amber-500/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-amber-500" />
+                Become an Agency
+              </CardTitle>
+              <CardDescription>Register your business to unlock premium features and manage teams</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate("/agency/register")} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700">
+                <Building2 className="mr-2 h-4 w-4" />
+                Register as Agency
+              </Button>
             </CardContent>
           </Card>
 

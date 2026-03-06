@@ -25,6 +25,7 @@ import RequesterDashboardPage from "./pages/RequesterDashboardPage";
 import Install from "./pages/Install";
 import Landing from "./pages/Landing";
 import AgencyDashboard from "./pages/AgencyDashboard";
+import AgencyRegistration from "./pages/AgencyRegistration";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
@@ -121,7 +122,7 @@ const App = () => (
             <Route 
               path="/task/:id/review" 
               element={
-                <ProtectedRoute requiredRole="requester">
+                <ProtectedRoute>
                   <ReviewTask />
                 </ProtectedRoute>
               } 
@@ -199,6 +200,14 @@ const App = () => (
               } 
             />
             <Route path="/install" element={<Install />} />
+            <Route 
+              path="/agency/register" 
+              element={
+                <ProtectedRoute>
+                  <AgencyRegistration />
+                </ProtectedRoute>
+              } 
+            />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
