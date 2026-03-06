@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { VerificationVideoPlayer } from "@/components/verification/VerificationVideoPlayer";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -434,13 +435,7 @@ export default function ReviewTask() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="aspect-video rounded-lg overflow-hidden bg-muted">
-              <video
-                src={verification.video_url}
-                controls
-                className="w-full h-full object-contain"
-              />
-            </div>
+            <VerificationVideoPlayer videoUrl={verification.video_url} />
           </CardContent>
         </Card>
 

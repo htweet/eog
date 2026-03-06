@@ -156,17 +156,15 @@ export default function VerifyTask() {
         throw new Error(`Upload failed: ${uploadError.message}`);
       }
 
-      // Get the video URL
-      const { data: urlData } = supabase.storage
-        .from("verification-videos")
-        .getPublicUrl(fileName);
+      // Store the file path (not a public URL) since bucket is private
+      const videoPath = fileName;
 
       // Create verification record
       const { error: verificationError } = await supabase
         .from("verifications")
         .insert([{
           task_id: task.id,
-          video_url: urlData.publicUrl,
+          video_url: videoPath,
           gps_latitude: gpsData.latitude,
           gps_longitude: gpsData.longitude,
           device_timestamp: gpsData.timestamp.toISOString(),

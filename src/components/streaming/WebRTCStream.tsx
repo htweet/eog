@@ -175,10 +175,8 @@ export function WebRTCStream({ taskId, taskTitle, mode, onStreamEnd }: WebRTCStr
           .upload(fileName, blob);
 
         if (!uploadError && uploadData) {
-          const { data: urlData } = supabase.storage
-            .from("verification-videos")
-            .getPublicUrl(fileName);
-          recordingUrl = urlData.publicUrl;
+          // Store file path, not public URL (bucket is private)
+          recordingUrl = fileName;
         }
       }
     }
