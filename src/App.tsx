@@ -200,6 +200,14 @@ const App = () => (
               } 
             />
             <Route path="/install" element={<Install />} />
+            <Route 
+              path="/agency/register" 
+              element={
+                <ProtectedRoute>
+                  <AgencyRegistration />
+                </ProtectedRoute>
+              } 
+            />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
