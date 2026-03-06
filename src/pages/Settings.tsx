@@ -228,6 +228,23 @@ export default function Settings() {
             </CardContent>
           </Card>
 
+          {/* Agency Registration CTA */}
+          <Card className="border-amber-500/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-amber-500" />
+                Become an Agency
+              </CardTitle>
+              <CardDescription>Register your business to unlock premium features and manage teams</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate("/agency/register")} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700">
+                <Building2 className="mr-2 h-4 w-4" />
+                Register as Agency
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Withdrawal Settings - Only for vouchers */}
           {(userRole === "voucher" || userRole === "requester") && (
             <WithdrawalSettings />
