@@ -194,7 +194,7 @@ const App = () => (
             <Route 
               path="/dashboard/agency" 
               element={
-                <ProtectedRoute requiredRole="voucher">
+                <ProtectedRoute>
                   <AgencyDashboard />
                 </ProtectedRoute>
               } 
