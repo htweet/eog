@@ -434,13 +434,7 @@ export default function ReviewTask() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="aspect-video rounded-lg overflow-hidden bg-muted">
-              <video
-                src={verification.video_url}
-                controls
-                className="w-full h-full object-contain"
-              />
-            </div>
+            <VerificationVideoPlayer videoUrl={verification.video_url} />
           </CardContent>
         </Card>
 
