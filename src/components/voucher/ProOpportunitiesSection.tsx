@@ -90,7 +90,7 @@ export function ProOpportunitiesSection({ onUpgrade }: ProOpportunitiesSectionPr
             Unlock {proTasks.length} premium tasks worth up to <span className="text-amber-500 font-semibold">₦{totalProBounty.toLocaleString()}</span> in potential earnings
           </p>
           <Button 
-            onClick={() => navigate("/settings")} 
+            onClick={() => navigate("/agency/register")} 
             className="gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
           >
             <Crown className="h-4 w-4" />
