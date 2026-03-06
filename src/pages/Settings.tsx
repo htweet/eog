@@ -21,6 +21,7 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export default function Settings() {
   const { user, userRole, allRoles } = useAuth();
+  const navigate = useNavigate();
   const { isSupported, isGranted, requestPermission } = usePushNotifications();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
