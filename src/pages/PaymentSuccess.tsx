@@ -90,9 +90,17 @@ export default function PaymentSuccess() {
 
           if (depositError) {
             console.error("Error processing deposit:", depositError);
-            // Still show success since payment was verified, just couldn't update wallet
             toast.warning("Payment verified but wallet update pending. Please contact support if balance is not updated.");
           } else if (result?.success) {
+            // Update the pending transaction to completed
+            if (pendingTxRef) {
+              await supabase
+                .from("transactions")
+                .update({ status: "completed" })
+                .eq("description", `Flutterwave deposit - ${pendingTxRef}`)
+                .eq("user_id", user.id)
+                .eq("status", "pending");
+            }
             toast.success("Payment verified! Funds added to your wallet.");
           } else if (result?.error === 'Transaction already processed') {
             toast.info("This payment has already been processed.");
