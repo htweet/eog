@@ -17,7 +17,6 @@ import { RoleSwitcher } from "@/components/settings/RoleSwitcher";
 import { WithdrawalSettings } from "@/components/settings/WithdrawalSettings";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useNavigate } from "react-router-dom";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export default function Settings() {
   const { user, userRole, allRoles } = useAuth();
