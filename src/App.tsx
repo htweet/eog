@@ -26,6 +26,7 @@ import Install from "./pages/Install";
 import Landing from "./pages/Landing";
 import AgencyDashboard from "./pages/AgencyDashboard";
 import AgencyRegistration from "./pages/AgencyRegistration";
+import Subscribe from "./pages/Subscribe";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
