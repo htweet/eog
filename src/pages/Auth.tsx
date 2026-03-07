@@ -153,9 +153,9 @@ export default function Auth() {
         </div>
 
         <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className={`grid w-full ${siteConfig.allowNewSignups ? 'grid-cols-2' : 'grid-cols-1'} mb-6`}>
             <TabsTrigger value="login">Log In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            {siteConfig.allowNewSignups && <TabsTrigger value="signup">Sign Up</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="login">
