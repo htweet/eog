@@ -92,6 +92,15 @@ export default function CreateTask() {
       return;
     }
 
+    if (parsedBounty < siteConfig.minBountyAmount) {
+      toast({
+        title: "Bounty too low",
+        description: `Minimum bounty is ₦${siteConfig.minBountyAmount.toLocaleString()}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (checklist.length === 0) {
       toast({
         title: "No checklist",
