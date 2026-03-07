@@ -1,4 +1,4 @@
-import { Menu, User, LogOut, Home, Search, Settings, Wallet, Shield } from "lucide-react";
+import { Menu, User, LogOut, Home, Search, Settings, Wallet, Shield, Building2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
