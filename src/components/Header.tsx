@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Header() {
-  const { user, userRole, isAdmin, signOut } = useAuth();
+  const { user, userRole, allRoles, isAdmin, signOut } = useAuth();
+  const showAgency = isAdmin || allRoles.includes('voucher');
   const navigate = useNavigate();
   const location = useLocation();
   
