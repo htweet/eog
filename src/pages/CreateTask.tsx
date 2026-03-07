@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useWallet } from "@/hooks/useWallet";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { LocationPicker } from "@/components/task/LocationPicker";
