@@ -312,9 +312,21 @@ export function AIVideoAnalysis() {
                           )}
                         </div>
                         <div className="flex flex-col gap-2">
-                          <Button size="sm" variant="outline" onClick={() => runAIAnalysis(v)} disabled={analyzing === v.id}>
-                            {analyzing === v.id ? (<><Loader2 className="h-4 w-4 animate-spin mr-1" />Analyzing...</>) : (<><Brain className="h-4 w-4 mr-1" />{v.ai_analysis_score !== null ? "Re-analyze" : "Analyze"}</>)}
+                          <Button size="sm" variant="outline" onClick={() => {
+                            // If we have a stored result, show it directly; otherwise run analysis
+                            if (v.ai_analysis_result) {
+                              setDetailView({ verification: v, result: v.ai_analysis_result });
+                            } else {
+                              runAIAnalysis(v);
+                            }
+                          }} disabled={analyzing === v.id}>
+                            {analyzing === v.id ? (<><Loader2 className="h-4 w-4 animate-spin mr-1" />Analyzing...</>) : (<><Brain className="h-4 w-4 mr-1" />{v.ai_analysis_score !== null ? "View" : "Analyze"}</>)}
                           </Button>
+                          {v.ai_analysis_score !== null && (
+                            <Button size="sm" variant="ghost" onClick={() => runAIAnalysis(v)} disabled={analyzing === v.id}>
+                              <RefreshCw className="h-4 w-4 mr-1" />Re-analyze
+                            </Button>
+                          )}
                           {v.video_url && (
                             <Button size="sm" variant="ghost" onClick={async () => {
                               const { getSignedVideoUrl } = await import("@/lib/storageUtils");

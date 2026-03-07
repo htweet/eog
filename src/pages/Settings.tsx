@@ -244,6 +244,23 @@ export default function Settings() {
             </CardContent>
           </Card>
 
+          {/* Subscription */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="w-5 h-5 text-primary" />
+                My Subscription
+              </CardTitle>
+              <CardDescription>Manage your subscription plan</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate("/subscribe")} variant="outline">
+                <Crown className="mr-2 h-4 w-4" />
+                View Plans & Subscribe
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Withdrawal Settings - Only for vouchers */}
           {(userRole === "voucher" || userRole === "requester") && (
             <WithdrawalSettings />

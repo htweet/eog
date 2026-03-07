@@ -125,7 +125,7 @@ export function PricingSection() {
                 <Button
                   className="w-full"
                   variant={plan.is_popular ? "default" : "outline"}
-                  onClick={() => navigate("/auth")}
+                  onClick={() => navigate(user ? "/subscribe" : "/auth")}
                 >
                   Get Started
                   <ArrowRight className="h-4 w-4 ml-1" />

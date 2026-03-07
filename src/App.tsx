@@ -202,6 +202,14 @@ const App = () => (
             />
             <Route path="/install" element={<Install />} />
             <Route 
+              path="/subscribe" 
+              element={
+                <ProtectedRoute>
+                  <Subscribe />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/agency/register" 
               element={
                 <ProtectedRoute>
