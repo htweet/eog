@@ -106,12 +106,32 @@ export function ProValidation() {
         } as any)
         .eq("id", selectedRequest.user_id);
 
+      // Activate any pending subscription for this user
+      const { data: pendingSubs } = await supabase
+        .from("user_subscriptions")
+        .select("id")
+        .eq("user_id", selectedRequest.user_id)
+        .eq("status", "pending")
+        .limit(1);
+
+      if (pendingSubs && pendingSubs.length > 0) {
+        await supabase
+          .from("user_subscriptions")
+          .update({
+            status: "active",
+            started_at: new Date().toISOString(),
+            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            admin_notes: "Activated upon agency approval",
+          } as any)
+          .eq("id", pendingSubs[0].id);
+      }
+
       // Send notification
       await supabase.from("notifications").insert({
         user_id: selectedRequest.user_id,
         type: "pro_approved",
         title: "Pro Account Approved! 🎉",
-        message: `Congratulations! Your ${selectedRequest.company_name} business account has been upgraded to Pro.`,
+        message: `Congratulations! Your ${selectedRequest.company_name} business account has been upgraded to Pro. Your subscription is now active.`,
       });
 
       toast({

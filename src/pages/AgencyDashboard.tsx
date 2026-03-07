@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProVoucher } from "@/hooks/useProVoucher";
@@ -51,9 +51,21 @@ import {
   CheckCircle,
   Crown,
   Send,
+  CreditCard,
+  XCircle,
+  Calendar,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+
+interface UserSubscription {
+  id: string;
+  status: string;
+  started_at: string;
+  expires_at: string | null;
+  plan: { name: string; price: number; billing_period: string } | null;
+}
 
 export default function AgencyDashboard() {
   const navigate = useNavigate();
@@ -66,6 +78,29 @@ export default function AgencyDashboard() {
   const [selectedStaffId, setSelectedStaffId] = useState<string>("");
   const [assigning, setAssigning] = useState(false);
 
+  // Fetch user's subscription
+  const { data: subscription } = useQuery({
+    queryKey: ["agency-subscription", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from("user_subscriptions")
+        .select("*, plan:pricing_plans!user_subscriptions_plan_id_fkey (name, price, billing_period)")
+        .eq("user_id", user.id)
+        .in("status", ["active", "pending"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) return null;
+      if (!data) return null;
+      return {
+        ...data,
+        plan: Array.isArray(data.plan) ? data.plan[0] : data.plan,
+      } as UserSubscription;
+    },
+    enabled: !!user,
+  });
+
   // Filter tasks assigned to this agency
   const agencyTasks = tasks.filter(t => t.voucher_id === user?.id);
   const assignedTasks = agencyTasks.filter(t => t.status === "assigned");
@@ -77,23 +112,15 @@ export default function AgencyDashboard() {
     
     setAssigning(true);
     
-    // Update the verification record with the assigned staff
     const { error } = await supabase
       .from("verifications")
       .update({ assigned_staff_id: selectedStaffId })
       .eq("task_id", selectedTask.id);
     
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to assign staff member",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to assign staff member", variant: "destructive" });
     } else {
-      toast({
-        title: "Staff Assigned",
-        description: "Team member has been assigned to this task",
-      });
+      toast({ title: "Staff Assigned", description: "Team member has been assigned to this task" });
       setSelectedTask(null);
       setSelectedStaffId("");
     }
@@ -131,13 +158,8 @@ export default function AgencyDashboard() {
       <div className="min-h-screen bg-background pb-20 md:pb-0">
         <Header />
         <main className="container max-w-2xl py-8">
-          <Button
-            variant="ghost"
-            className="mb-6 gap-2"
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
+          <Button variant="ghost" className="mb-6 gap-2" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4" />Back
           </Button>
           <ProUpgradeCard />
         </main>
@@ -152,14 +174,8 @@ export default function AgencyDashboard() {
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Header />
       <main className="container py-8">
-        {/* Back button */}
-        <Button
-          variant="ghost"
-          className="mb-6 gap-2"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
+        <Button variant="ghost" className="mb-6 gap-2" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-4 w-4" />Back
         </Button>
 
         {/* Header */}
@@ -226,18 +242,22 @@ export default function AgencyDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="dispatch" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="dispatch" className="gap-2">
               <MapPin className="h-4 w-4" />
-              <span className="hidden sm:inline">Dispatch Center</span>
+              <span className="hidden sm:inline">Dispatch</span>
             </TabsTrigger>
             <TabsTrigger value="team" className="gap-2">
               <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Team Hub</span>
+              <span className="hidden sm:inline">Team</span>
             </TabsTrigger>
             <TabsTrigger value="tasks" className="gap-2">
               <ClipboardList className="h-4 w-4" />
               <span className="hidden sm:inline">Tasks</span>
+            </TabsTrigger>
+            <TabsTrigger value="billing" className="gap-2">
+              <CreditCard className="h-4 w-4" />
+              <span className="hidden sm:inline">Billing</span>
             </TabsTrigger>
             <TabsTrigger value="wallet" className="gap-2">
               <Wallet className="h-4 w-4" />
@@ -369,6 +389,76 @@ export default function AgencyDashboard() {
             </Card>
           </TabsContent>
 
+          {/* Billing Tab */}
+          <TabsContent value="billing">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Subscription & Billing
+                </CardTitle>
+                <CardDescription>Your current subscription plan and billing details</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {subscription ? (
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-lg border bg-muted/30 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Crown className="h-5 w-5 text-amber-500" />
+                          <span className="font-semibold text-lg">{subscription.plan?.name || "Plan"}</span>
+                        </div>
+                        <Badge className={
+                          subscription.status === "active"
+                            ? "bg-green-500/10 text-green-500 border-green-500/20"
+                            : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                        }>
+                          {subscription.status === "active" ? (
+                            <><CheckCircle className="h-3 w-3 mr-1" />Active</>
+                          ) : (
+                            <><Clock className="h-3 w-3 mr-1" />Pending</>
+                          )}
+                        </Badge>
+                      </div>
+                      <div className="grid gap-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Price</span>
+                          <span className="font-bold">₦{(subscription.plan?.price || 0).toLocaleString()}/{subscription.plan?.billing_period || "month"}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Started</span>
+                          <span>{new Date(subscription.started_at).toLocaleDateString()}</span>
+                        </div>
+                        {subscription.expires_at && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Expires</span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(subscription.expires_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <Button variant="outline" onClick={() => navigate("/subscribe")}>
+                      <Crown className="h-4 w-4 mr-2" />
+                      Change Plan
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <CreditCard className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                    <p className="mb-4">No active subscription</p>
+                    <Button onClick={() => navigate("/subscribe")}>
+                      <Crown className="h-4 w-4 mr-2" />
+                      Subscribe to a Plan
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Wallet Tab */}
           <TabsContent value="wallet">
             <WalletCard />
@@ -428,15 +518,9 @@ export default function AgencyDashboard() {
               disabled={assigning || !selectedStaffId}
             >
               {assigning ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Assigning...
-                </>
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Assigning...</>
               ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Assign Staff
-                </>
+                <><Send className="h-4 w-4 mr-2" />Assign Staff</>
               )}
             </Button>
           </DialogFooter>
