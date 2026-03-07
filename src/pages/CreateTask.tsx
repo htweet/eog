@@ -39,6 +39,7 @@ export default function CreateTask() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { balance, holdEscrow, loading: walletLoading } = useWallet();
+  const { siteConfig } = usePlatformSettings();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
