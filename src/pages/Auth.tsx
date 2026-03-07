@@ -19,6 +19,7 @@ type AppRole = 'requester' | 'voucher';
 export default function Auth() {
   const navigate = useNavigate();
   const { signUp, signIn, user } = useAuth();
+  const { siteConfig } = usePlatformSettings();
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(false);
