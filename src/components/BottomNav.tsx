@@ -44,6 +44,13 @@ export function BottomNav() {
       active: location.pathname === "/create-task",
       primary: true
     }] : []),
+    // Agency link for vouchers and admins
+    ...(showAgency ? [{
+      icon: Building2,
+      label: "Agency",
+      path: "/dashboard/agency",
+      active: location.pathname === "/dashboard/agency"
+    }] : []),
     { 
       icon: Settings, 
       label: "Settings", 
