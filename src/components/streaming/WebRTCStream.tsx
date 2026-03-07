@@ -374,10 +374,13 @@ export function WebRTCStream({ taskId, taskTitle, mode, onStreamEnd }: WebRTCStr
               </div>
               <Switch checked={autoRecord} onCheckedChange={setAutoRecord} />
             </div>
-            <Button className="w-full" size="lg" onClick={startStream}>
+            <Button className="w-full" size="lg" onClick={startStream} disabled={!streamingEnabled}>
               <Radio className="h-5 w-5 mr-2" />
-              Go Live
+              {streamingEnabled ? "Go Live" : "Streaming Disabled"}
             </Button>
+            {!streamingEnabled && (
+              <p className="text-xs text-muted-foreground text-center">Live streaming has been disabled by the administrator.</p>
+            )}
           </div>
         )}
       </CardContent>
