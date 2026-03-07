@@ -137,6 +137,12 @@ export function Header() {
                 <Home className="mr-2 h-4 w-4" />
                 Dashboard
               </DropdownMenuItem>
+              {showAgency && (
+                <DropdownMenuItem onClick={() => navigate("/dashboard/agency")}>
+                  <Building2 className="mr-2 h-4 w-4" />
+                  Agency
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => navigate("/browse")}>
                 <Search className="mr-2 h-4 w-4" />
                 Browse
