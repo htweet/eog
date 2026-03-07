@@ -203,6 +203,7 @@ export default function Auth() {
             </Card>
           </TabsContent>
 
+          {siteConfig.allowNewSignups && (
           <TabsContent value="signup">
             <Card className="shadow-card border-border/50">
               <CardHeader>

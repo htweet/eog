@@ -305,7 +305,7 @@ export default function CreateTask() {
                   <Input
                     id="bounty"
                     type="number"
-                    min="1"
+                    min={siteConfig.minBountyAmount}
                     step="0.01"
                     placeholder="5000"
                     value={bountyAmount}
