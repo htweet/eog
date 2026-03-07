@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User, Bell, Shield, Palette, Save, Loader2, Camera, Wallet, RefreshCw, Building2 } from "lucide-react";
+import { User, Bell, Shield, Palette, Save, Loader2, Camera, Wallet, RefreshCw, Building2, Crown } from "lucide-react";
 import { RoleSwitcher } from "@/components/settings/RoleSwitcher";
 import { WithdrawalSettings } from "@/components/settings/WithdrawalSettings";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
