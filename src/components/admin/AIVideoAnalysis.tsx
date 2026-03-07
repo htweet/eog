@@ -20,7 +20,7 @@ interface Verification {
   task_id: string;
   video_url: string;
   ai_analysis_score: number | null;
-  ai_analysis_result: AnalysisResult | null;
+  ai_analysis_result: any;
   gps_latitude: number | null;
   gps_longitude: number | null;
   device_timestamp: string | null;
