@@ -1,25 +1,11 @@
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { useProVoucher } from "@/hooks/useProVoucher";
 import { ProBadge } from "./ProBadge";
 import { 
   Building2, 
   Crown, 
-  Check, 
-  Loader2, 
   Star,
   Users,
   TrendingUp,
@@ -28,31 +14,14 @@ import {
 } from "lucide-react";
 
 export function ProUpgradeCard() {
+  const navigate = useNavigate();
   const { 
     isPro, 
     isPendingPro, 
     upgradeRequest, 
     proProfile,
-    requestProUpgrade, 
     loading 
   } = useProVoucher();
-  
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [companyName, setCompanyName] = useState("");
-  const [registrationNumber, setRegistrationNumber] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  const handleSubmit = async () => {
-    if (!companyName || !registrationNumber) return;
-    
-    setSubmitting(true);
-    const result = await requestProUpgrade(companyName, registrationNumber);
-    setSubmitting(false);
-    
-    if (result.success) {
-      setDialogOpen(false);
-    }
-  };
 
   if (isPro) {
     return (
@@ -185,67 +154,13 @@ export function ProUpgradeCard() {
           ))}
         </div>
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700">
-              <Crown className="h-4 w-4 mr-2" />
-              Apply for Pro Account
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Apply for Pro Account</DialogTitle>
-              <DialogDescription>
-                Submit your business details for verification. Approval typically takes 1-2 business days.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="company-name">Company Name</Label>
-                <Input
-                  id="company-name"
-                  placeholder="e.g., FixIt Pros Ltd"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="reg-number">Business Registration Number (RC)</Label>
-                <Input
-                  id="reg-number"
-                  placeholder="e.g., RC123456"
-                  value={registrationNumber}
-                  onChange={(e) => setRegistrationNumber(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Your CAC registration number or equivalent business ID
-                </p>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleSubmit} 
-                disabled={submitting || !companyName || !registrationNumber}
-                className="bg-gradient-to-r from-amber-500 to-amber-600"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  "Submit Application"
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <Button 
+          className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
+          onClick={() => navigate("/agency/register")}
+        >
+          <Crown className="h-4 w-4 mr-2" />
+          Apply for Pro Account
+        </Button>
       </CardContent>
     </Card>
   );

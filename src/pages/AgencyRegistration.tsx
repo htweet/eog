@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,14 +11,26 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useProVoucher } from "@/hooks/useProVoucher";
 import {
   Building2, Crown, Shield, Users, TrendingUp, Star,
-  ArrowLeft, Loader2, CheckCircle, Clock, FileText, MapPin,
+  ArrowLeft, Loader2, CheckCircle, Clock, FileText, CreditCard,
 } from "lucide-react";
 
-const STEPS = ["Business Info", "KYC Documents", "Review & Submit"];
+const STEPS = ["Business Info", "KYC Documents", "Select Plan", "Review & Submit"];
+
+interface PricingPlan {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  billing_period: string;
+  features: any;
+  is_popular: boolean;
+  badge_text: string | null;
+}
 
 export default function AgencyRegistration() {
   const navigate = useNavigate();
@@ -40,7 +52,34 @@ export default function AgencyRegistration() {
   const [idNumber, setIdNumber] = useState("");
   const [kycAddress, setKycAddress] = useState("");
 
+  // Step 3: Plan Selection
+  const [plans, setPlans] = useState<PricingPlan[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [plansLoading, setPlansLoading] = useState(true);
+
   const hasVoucherRole = allRoles.includes("voucher");
+
+  useEffect(() => {
+    fetchPlans();
+  }, []);
+
+  const fetchPlans = async () => {
+    setPlansLoading(true);
+    const { data } = await supabase
+      .from("pricing_plans")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+    if (data) {
+      setPlans(data as PricingPlan[]);
+      const popular = data.find(p => p.is_popular);
+      if (popular) setSelectedPlanId(popular.id);
+      else if (data.length > 0) setSelectedPlanId(data[0].id);
+    }
+    setPlansLoading(false);
+  };
+
+  const selectedPlan = plans.find(p => p.id === selectedPlanId);
 
   // Already submitted
   if (isPendingPro) {
@@ -112,6 +151,10 @@ export default function AgencyRegistration() {
       toast({ title: "Missing Info", description: "Please fill in all required fields", variant: "destructive" });
       return;
     }
+    if (!selectedPlanId) {
+      toast({ title: "Select a Plan", description: "Please choose a subscription plan", variant: "destructive" });
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -136,6 +179,17 @@ export default function AgencyRegistration() {
 
       if (error) throw error;
 
+      // Create a pending subscription linked to the selected plan
+      const { error: subError } = await supabase.from("user_subscriptions").insert({
+        user_id: user.id,
+        plan_id: selectedPlanId,
+        status: "pending",
+        started_at: new Date().toISOString(),
+        admin_notes: `Pending agency approval for ${companyName}`,
+      });
+
+      if (subError) throw subError;
+
       // Update profile to pending_pro
       await supabase.from("profiles").update({
         voucher_tier: "pending_pro",
@@ -154,7 +208,7 @@ export default function AgencyRegistration() {
           user_id: r.user_id,
           type: "agency_application",
           title: "New Agency Application",
-          message: `${companyName} has applied for agency status.`,
+          message: `${companyName} has applied for agency status with ${selectedPlan?.name || "a"} plan.`,
         }));
         if (notifications.length > 0) {
           await supabase.from("notifications").insert(notifications);
@@ -178,6 +232,13 @@ export default function AgencyRegistration() {
     { icon: Star, text: "Priority placement in voucher listings" },
     { icon: Shield, text: "Dedicated agency dashboard with dispatch tools" },
   ];
+
+  const formatFeatures = (features: any): string[] => {
+    if (Array.isArray(features)) {
+      return features.map(f => typeof f === "string" ? f : (f.text || f.label || f.name || JSON.stringify(f)));
+    }
+    return [];
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
@@ -286,13 +347,97 @@ export default function AgencyRegistration() {
                 </div>
                 <div className="flex gap-3">
                   <Button variant="outline" onClick={() => setStep(0)} className="flex-1">Back</Button>
-                  <Button onClick={() => setStep(2)} className="flex-1">Review Application</Button>
+                  <Button onClick={() => setStep(2)} className="flex-1">Select Plan</Button>
                 </div>
               </CardContent>
             </>
           )}
 
           {step === 2 && (
+            <>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><CreditCard className="h-5 w-5" />Choose Your Plan</CardTitle>
+                <CardDescription>Select a subscription plan for your agency. Your subscription activates upon approval.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {plansLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-lg" />)}
+                  </div>
+                ) : plans.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <CreditCard className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                    <p>No plans available at this time.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {plans.map((plan) => {
+                      const isSelected = selectedPlanId === plan.id;
+                      const features = formatFeatures(plan.features);
+                      return (
+                        <button
+                          key={plan.id}
+                          type="button"
+                          onClick={() => setSelectedPlanId(plan.id)}
+                          className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                            isSelected
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-muted-foreground/30"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold">{plan.name}</h4>
+                                {plan.is_popular && (
+                                  <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-xs">Popular</Badge>
+                                )}
+                                {plan.badge_text && (
+                                  <Badge variant="outline" className="text-xs">{plan.badge_text}</Badge>
+                                )}
+                              </div>
+                              {plan.description && (
+                                <p className="text-sm text-muted-foreground mt-1">{plan.description}</p>
+                              )}
+                              {features.length > 0 && (
+                                <ul className="mt-2 space-y-1">
+                                  {features.slice(0, 4).map((f, i) => (
+                                    <li key={i} className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                      <CheckCircle className="h-3 w-3 text-green-500 shrink-0" />
+                                      {f}
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                            <div className="text-right shrink-0 ml-4">
+                              <p className="text-xl font-bold">₦{plan.price.toLocaleString()}</p>
+                              <p className="text-xs text-muted-foreground">/{plan.billing_period}</p>
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <div className="mt-3 pt-3 border-t border-primary/20">
+                              <p className="text-xs text-primary font-medium flex items-center gap-1">
+                                <CheckCircle className="h-3 w-3" /> Selected
+                              </p>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => setStep(1)} className="flex-1">Back</Button>
+                  <Button onClick={() => setStep(3)} className="flex-1" disabled={!selectedPlanId}>
+                    Review Application
+                  </Button>
+                </div>
+              </CardContent>
+            </>
+          )}
+
+          {step === 3 && (
             <>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2"><CheckCircle className="h-5 w-5" />Review & Submit</CardTitle>
@@ -313,13 +458,21 @@ export default function AgencyRegistration() {
                     {kycAddress && <div className="flex justify-between"><span className="text-muted-foreground">Address</span><span>{kycAddress}</span></div>}
                   </div>
                 )}
+                {selectedPlan && (
+                  <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-3 text-sm">
+                    <h4 className="font-semibold flex items-center gap-2"><CreditCard className="h-4 w-4" />Subscription Plan</h4>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Plan</span><span className="font-medium">{selectedPlan.name}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Price</span><span className="font-bold">₦{selectedPlan.price.toLocaleString()}/{selectedPlan.billing_period}</span></div>
+                    <p className="text-xs text-muted-foreground">Your subscription activates once your agency is approved.</p>
+                  </div>
+                )}
                 {!hasVoucherRole && (
                   <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 text-sm text-amber-600 dark:text-amber-400">
                     <strong>Note:</strong> A voucher role will be added to your account to enable agency features.
                   </div>
                 )}
                 <div className="flex gap-3">
-                  <Button variant="outline" onClick={() => setStep(1)} className="flex-1">Back</Button>
+                  <Button variant="outline" onClick={() => setStep(2)} className="flex-1">Back</Button>
                   <Button onClick={handleSubmit} disabled={submitting} className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700">
                     {submitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Submitting...</> : <><Crown className="h-4 w-4 mr-2" />Submit Application</>}
                   </Button>
