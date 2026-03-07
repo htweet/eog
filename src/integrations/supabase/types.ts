@@ -975,6 +975,7 @@ export type Database = {
       }
       verifications: {
         Row: {
+          ai_analysis_result: Json | null
           ai_analysis_score: number | null
           assigned_staff_id: string | null
           completed_checklist: Json | null
@@ -987,6 +988,7 @@ export type Database = {
           video_url: string
         }
         Insert: {
+          ai_analysis_result?: Json | null
           ai_analysis_score?: number | null
           assigned_staff_id?: string | null
           completed_checklist?: Json | null
@@ -999,6 +1001,7 @@ export type Database = {
           video_url: string
         }
         Update: {
+          ai_analysis_result?: Json | null
           ai_analysis_score?: number | null
           assigned_staff_id?: string | null
           completed_checklist?: Json | null

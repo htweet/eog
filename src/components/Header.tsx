@@ -54,6 +54,16 @@ export function Header() {
             <Search className="mr-2 h-4 w-4" />
             Browse
           </Button>
+          {showAgency && (
+            <Button 
+              variant={isActive("/dashboard/agency") ? "secondary" : "ghost"} 
+              className="text-foreground"
+              onClick={() => navigate("/dashboard/agency")}
+            >
+              <Building2 className="mr-2 h-4 w-4" />
+              Agency
+            </Button>
+          )}
         </nav>
 
         {/* Actions */}
