@@ -22,6 +22,7 @@ interface PricingPlan {
 
 export function PricingSection() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [loading, setLoading] = useState(true);
 
