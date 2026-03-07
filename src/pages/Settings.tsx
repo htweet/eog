@@ -9,10 +9,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProVoucher } from "@/hooks/useProVoucher";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User, Bell, Shield, Palette, Save, Loader2, Camera, Wallet, RefreshCw, Building2, Crown } from "lucide-react";
+import { User, Bell, Shield, Palette, Save, Loader2, Camera, Wallet, RefreshCw, Building2, Crown, Clock, CheckCircle } from "lucide-react";
 import { RoleSwitcher } from "@/components/settings/RoleSwitcher";
 import { WithdrawalSettings } from "@/components/settings/WithdrawalSettings";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -21,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 export default function Settings() {
   const { user, userRole, allRoles } = useAuth();
   const navigate = useNavigate();
+  const { isPro, isPendingPro } = useProVoucher();
   const { isSupported, isGranted, requestPermission } = usePushNotifications();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -121,6 +124,67 @@ export default function Settings() {
       </div>
     );
   }
+
+  // Render agency card based on status
+  const renderAgencyCard = () => {
+    if (isPro) {
+      return (
+        <Card className="border-green-500/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-green-500" />
+              Agency Status
+              <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
+                <CheckCircle className="h-3 w-3 mr-1" />Active
+              </Badge>
+            </CardTitle>
+            <CardDescription>Your business is verified. Manage your agency from the dashboard.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => navigate("/dashboard/agency")} variant="outline">
+              <Building2 className="mr-2 h-4 w-4" />
+              Go to Agency Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (isPendingPro) {
+      return (
+        <Card className="border-amber-500/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-amber-500" />
+              Agency Application
+              <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">
+                <Clock className="h-3 w-3 mr-1" />Under Review
+              </Badge>
+            </CardTitle>
+            <CardDescription>Your agency registration is being reviewed. You'll be notified once approved.</CardDescription>
+          </CardHeader>
+        </Card>
+      );
+    }
+
+    return (
+      <Card className="border-amber-500/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-amber-500" />
+            Become an Agency
+          </CardTitle>
+          <CardDescription>Register your business to unlock premium features and manage teams</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={() => navigate("/agency/register")} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700">
+            <Building2 className="mr-2 h-4 w-4" />
+            Register as Agency
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
@@ -227,22 +291,8 @@ export default function Settings() {
             </CardContent>
           </Card>
 
-          {/* Agency Registration CTA */}
-          <Card className="border-amber-500/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-amber-500" />
-                Become an Agency
-              </CardTitle>
-              <CardDescription>Register your business to unlock premium features and manage teams</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={() => navigate("/agency/register")} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700">
-                <Building2 className="mr-2 h-4 w-4" />
-                Register as Agency
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Agency Registration CTA - context-aware */}
+          {renderAgencyCard()}
 
           {/* Subscription */}
           <Card>
