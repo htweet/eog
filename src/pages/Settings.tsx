@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User, Bell, Shield, Palette, Save, Loader2, Camera, Wallet, RefreshCw, Building2 } from "lucide-react";
+import { User, Bell, Shield, Palette, Save, Loader2, Camera, Wallet, RefreshCw, Building2, Crown } from "lucide-react";
 import { RoleSwitcher } from "@/components/settings/RoleSwitcher";
 import { WithdrawalSettings } from "@/components/settings/WithdrawalSettings";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -240,6 +240,23 @@ export default function Settings() {
               <Button onClick={() => navigate("/agency/register")} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700">
                 <Building2 className="mr-2 h-4 w-4" />
                 Register as Agency
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Subscription */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="w-5 h-5 text-primary" />
+                My Subscription
+              </CardTitle>
+              <CardDescription>Manage your subscription plan</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate("/subscribe")} variant="outline">
+                <Crown className="mr-2 h-4 w-4" />
+                View Plans & Subscribe
               </Button>
             </CardContent>
           </Card>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Video, Radio, Users, Monitor, Settings, Activity, Loader2, Eye, Clock, StopCircle,
+  Video, Radio, Users, Settings, Activity, Loader2, Eye, Clock, StopCircle,
 } from "lucide-react";
 
 interface LiveStreamDB {
@@ -32,22 +33,25 @@ interface StreamSettings {
   allowRewatch: boolean;
 }
 
+const DEFAULT_SETTINGS: StreamSettings = {
+  enableLiveStreaming: true,
+  autoRecordStreams: true,
+  maxStreamDuration: 30,
+  requireApproval: false,
+  allowRewatch: true,
+};
+
 export function LiveStreamingPanel() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [streams, setStreams] = useState<LiveStreamDB[]>([]);
-  const [settings, setSettings] = useState<StreamSettings>({
-    enableLiveStreaming: true,
-    autoRecordStreams: true,
-    maxStreamDuration: 30,
-    requireApproval: false,
-    allowRewatch: true,
-  });
+  const [settings, setSettings] = useState<StreamSettings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
     fetchStreams();
+    fetchSettings();
 
-    // Real-time subscription for live stream updates
     const channel = supabase
       .channel("admin-streams")
       .on("postgres_changes", { event: "*", schema: "public", table: "live_streams" }, () => {
@@ -57,6 +61,18 @@ export function LiveStreamingPanel() {
 
     return () => { supabase.removeChannel(channel); };
   }, []);
+
+  const fetchSettings = async () => {
+    const { data } = await supabase
+      .from("platform_settings")
+      .select("setting_value")
+      .eq("setting_key", "stream_config")
+      .maybeSingle();
+
+    if (data?.setting_value) {
+      setSettings({ ...DEFAULT_SETTINGS, ...(data.setting_value as object) });
+    }
+  };
 
   const fetchStreams = async () => {
     const { data, error } = await supabase
@@ -81,8 +97,34 @@ export function LiveStreamingPanel() {
     fetchStreams();
   };
 
-  const updateSetting = (key: keyof StreamSettings, value: boolean | number) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+  const persistSettings = async (newSettings: StreamSettings) => {
+    // Upsert into platform_settings
+    const { data: existing } = await supabase
+      .from("platform_settings")
+      .select("id")
+      .eq("setting_key", "stream_config")
+      .maybeSingle();
+
+    if (existing) {
+      await supabase.from("platform_settings").update({
+        setting_value: newSettings as unknown as undefined,
+        updated_by: user?.id,
+        updated_at: new Date().toISOString(),
+      }).eq("id", existing.id);
+    } else {
+      await supabase.from("platform_settings").insert({
+        setting_key: "stream_config",
+        setting_value: newSettings as unknown as undefined,
+        description: "Live streaming configuration",
+        updated_by: user?.id,
+      });
+    }
+  };
+
+  const updateSetting = async (key: keyof StreamSettings, value: boolean | number) => {
+    const newSettings = { ...settings, [key]: value };
+    setSettings(newSettings);
+    await persistSettings(newSettings);
     toast({ title: "Settings Updated" });
   };
 
@@ -146,7 +188,7 @@ export function LiveStreamingPanel() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Active + Recent Streams */}
+        {/* Streams List */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Radio className="h-5 w-5 text-destructive" />Streams</CardTitle>
@@ -199,11 +241,11 @@ export function LiveStreamingPanel() {
           </CardContent>
         </Card>
 
-        {/* Settings */}
+        {/* Settings - persisted to DB */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Settings className="h-5 w-5" />Stream Settings</CardTitle>
-            <CardDescription>Configure live streaming options</CardDescription>
+            <CardDescription>Settings are synced globally and affect the frontend in real-time</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {([

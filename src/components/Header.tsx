@@ -1,4 +1,4 @@
-import { Menu, User, LogOut, Home, Search, Settings, Wallet, Shield } from "lucide-react";
+import { Menu, User, LogOut, Home, Search, Settings, Wallet, Shield, Building2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Header() {
-  const { user, userRole, isAdmin, signOut } = useAuth();
+  const { user, userRole, allRoles, isAdmin, signOut } = useAuth();
+  const showAgency = isAdmin || allRoles.includes('voucher');
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -53,6 +54,16 @@ export function Header() {
             <Search className="mr-2 h-4 w-4" />
             Browse
           </Button>
+          {showAgency && (
+            <Button 
+              variant={isActive("/dashboard/agency") ? "secondary" : "ghost"} 
+              className="text-foreground"
+              onClick={() => navigate("/dashboard/agency")}
+            >
+              <Building2 className="mr-2 h-4 w-4" />
+              Agency
+            </Button>
+          )}
         </nav>
 
         {/* Actions */}
@@ -126,6 +137,12 @@ export function Header() {
                 <Home className="mr-2 h-4 w-4" />
                 Dashboard
               </DropdownMenuItem>
+              {showAgency && (
+                <DropdownMenuItem onClick={() => navigate("/dashboard/agency")}>
+                  <Building2 className="mr-2 h-4 w-4" />
+                  Agency
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => navigate("/browse")}>
                 <Search className="mr-2 h-4 w-4" />
                 Browse

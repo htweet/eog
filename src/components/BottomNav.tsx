@@ -1,4 +1,4 @@
-import { Home, Search, PlusCircle, User, Settings } from "lucide-react";
+import { Home, Search, PlusCircle, User, Settings, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,7 +6,8 @@ import { useAuth } from "@/contexts/AuthContext";
 export function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userRole, isAdmin } = useAuth();
+  const { userRole, allRoles, isAdmin } = useAuth();
+  const showAgency = isAdmin || allRoles.includes('voucher');
 
   // Determine home path based on active role
   const getHomePath = () => {
@@ -42,6 +43,13 @@ export function BottomNav() {
       path: "/create-task", 
       active: location.pathname === "/create-task",
       primary: true
+    }] : []),
+    // Agency link for vouchers and admins
+    ...(showAgency ? [{
+      icon: Building2,
+      label: "Agency",
+      path: "/dashboard/agency",
+      active: location.pathname === "/dashboard/agency"
     }] : []),
     { 
       icon: Settings, 

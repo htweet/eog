@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import {
   Video,
   VideoOff,
@@ -30,6 +31,7 @@ interface WebRTCStreamProps {
 export function WebRTCStream({ taskId, taskTitle, mode, onStreamEnd }: WebRTCStreamProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { streamConfig } = usePlatformSettings();
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -37,23 +39,34 @@ export function WebRTCStream({ taskId, taskTitle, mode, onStreamEnd }: WebRTCStr
   
   const [isStreaming, setIsStreaming] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [autoRecord, setAutoRecord] = useState(true);
+  const [autoRecord, setAutoRecord] = useState(streamConfig.autoRecordStreams);
   const [viewerCount, setViewerCount] = useState(0);
   const [streamDuration, setStreamDuration] = useState(0);
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [isMicOn, setIsMicOn] = useState(true);
   const [streamId, setStreamId] = useState<string | null>(null);
+
+  const streamingEnabled = streamConfig.enableLiveStreaming;
+  const maxDurationSeconds = streamConfig.maxStreamDuration * 60;
   
   // Timer for stream duration
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isStreaming) {
       interval = setInterval(() => {
-        setStreamDuration((prev) => prev + 1);
+        setStreamDuration((prev) => {
+          const next = prev + 1;
+          // Auto-stop when max duration reached
+          if (next >= maxDurationSeconds) {
+            stopStream();
+            toast({ title: "Stream Ended", description: `Maximum duration of ${streamConfig.maxStreamDuration} minutes reached.` });
+          }
+          return next;
+        });
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isStreaming]);
+  }, [isStreaming, maxDurationSeconds]);
 
   // Real-time viewer count updates
   useEffect(() => {
@@ -361,10 +374,13 @@ export function WebRTCStream({ taskId, taskTitle, mode, onStreamEnd }: WebRTCStr
               </div>
               <Switch checked={autoRecord} onCheckedChange={setAutoRecord} />
             </div>
-            <Button className="w-full" size="lg" onClick={startStream}>
+            <Button className="w-full" size="lg" onClick={startStream} disabled={!streamingEnabled}>
               <Radio className="h-5 w-5 mr-2" />
-              Go Live
+              {streamingEnabled ? "Go Live" : "Streaming Disabled"}
             </Button>
+            {!streamingEnabled && (
+              <p className="text-xs text-muted-foreground text-center">Live streaming has been disabled by the administrator.</p>
+            )}
           </div>
         )}
       </CardContent>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePlatformSettings } from '@/hooks/usePlatformSettings';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +19,7 @@ type AppRole = 'requester' | 'voucher';
 export default function Auth() {
   const navigate = useNavigate();
   const { signUp, signIn, user } = useAuth();
+  const { siteConfig } = usePlatformSettings();
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(false);
@@ -151,9 +153,9 @@ export default function Auth() {
         </div>
 
         <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className={`grid w-full ${siteConfig.allowNewSignups ? 'grid-cols-2' : 'grid-cols-1'} mb-6`}>
             <TabsTrigger value="login">Log In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            {siteConfig.allowNewSignups && <TabsTrigger value="signup">Sign Up</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="login">
@@ -201,6 +203,7 @@ export default function Auth() {
             </Card>
           </TabsContent>
 
+          {siteConfig.allowNewSignups && (
           <TabsContent value="signup">
             <Card className="shadow-card border-border/50">
               <CardHeader>
@@ -299,6 +302,7 @@ export default function Auth() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>

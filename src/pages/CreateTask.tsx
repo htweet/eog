@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useWallet } from "@/hooks/useWallet";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { LocationPicker } from "@/components/task/LocationPicker";
@@ -38,6 +39,7 @@ export default function CreateTask() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { balance, holdEscrow, loading: walletLoading } = useWallet();
+  const { siteConfig } = usePlatformSettings();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -85,6 +87,15 @@ export default function CreateTask() {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (parsedBounty < siteConfig.minBountyAmount) {
+      toast({
+        title: "Bounty too low",
+        description: `Minimum bounty is ₦${siteConfig.minBountyAmount.toLocaleString()}`,
         variant: "destructive",
       });
       return;
@@ -294,7 +305,7 @@ export default function CreateTask() {
                   <Input
                     id="bounty"
                     type="number"
-                    min="1"
+                    min={siteConfig.minBountyAmount}
                     step="0.01"
                     placeholder="5000"
                     value={bountyAmount}

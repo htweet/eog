@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +22,7 @@ interface PricingPlan {
 
 export function PricingSection() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -123,7 +125,7 @@ export function PricingSection() {
                 <Button
                   className="w-full"
                   variant={plan.is_popular ? "default" : "outline"}
-                  onClick={() => navigate("/auth")}
+                  onClick={() => navigate(user ? "/subscribe" : "/auth")}
                 >
                   Get Started
                   <ArrowRight className="h-4 w-4 ml-1" />
