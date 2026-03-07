@@ -6,7 +6,8 @@ import { useAuth } from "@/contexts/AuthContext";
 export function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userRole, isAdmin } = useAuth();
+  const { userRole, allRoles, isAdmin } = useAuth();
+  const showAgency = isAdmin || allRoles.includes('voucher');
 
   // Determine home path based on active role
   const getHomePath = () => {
