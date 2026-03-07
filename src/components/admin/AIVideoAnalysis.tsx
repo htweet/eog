@@ -148,7 +148,7 @@ export function AIVideoAnalysis() {
         } else { score += 10; }
 
         const checklistAnalysis = checklistItems.map((item: any) => ({
-          item: item.text || item,
+          item: typeof item === 'string' ? item : (item.text || item.label || item.name || JSON.stringify(item)),
           verified: Math.random() > 0.15,
           confidence: 65 + Math.floor(Math.random() * 30),
         }));
