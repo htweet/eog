@@ -1,4 +1,4 @@
-import { Home, Search, PlusCircle, User, Settings } from "lucide-react";
+import { Home, Search, PlusCircle, User, Settings, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
