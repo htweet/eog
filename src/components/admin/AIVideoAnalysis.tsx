@@ -162,8 +162,11 @@ export function AIVideoAnalysis() {
         };
       }
 
-      // Save the score
-      await supabase.from("verifications").update({ ai_analysis_score: analysisResult.overall_score }).eq("id", verification.id);
+      // Save the score and full analysis result
+      await supabase.from("verifications").update({ 
+        ai_analysis_score: analysisResult.overall_score,
+        ai_analysis_result: analysisResult as unknown as undefined,
+      }).eq("id", verification.id);
 
       toast({ title: "AI Analysis Complete", description: `Score: ${analysisResult.overall_score}% — ${analysisResult.recommendation.toUpperCase()}` });
 
