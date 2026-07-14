@@ -44,14 +44,21 @@ export default function Profile() {
     
     const { data, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select("id, full_name, bio, avatar_url, trust_score, is_verified")
       .eq("id", user.id)
       .single();
+
+    // Fetch wallet balance via SECURITY DEFINER RPC
+    const { data: walletRows } = await supabase.rpc("get_my_wallet");
+    const wallet = Array.isArray(walletRows) ? walletRows[0] : walletRows;
 
     if (error) {
       console.error("Error fetching profile:", error);
     } else {
-      setProfile(data);
+      setProfile({
+        ...(data as any),
+        wallet_balance: Number(wallet?.wallet_balance) || 0,
+      });
       setFullName(data.full_name || "");
       setBio(data.bio || "");
     }

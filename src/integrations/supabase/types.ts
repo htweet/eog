@@ -1287,6 +1287,27 @@ export type Database = {
             }
             Returns: string
           }
+      admin_credit_wallet: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: Json
+      }
+      admin_debit_wallet: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: Json
+      }
+      admin_get_wallets_map: {
+        Args: never
+        Returns: {
+          escrow_balance: number
+          user_id: string
+          wallet_balance: number
+          withdrawable_balance: number
+        }[]
+      }
+      assign_signup_role: {
+        Args: { p_role: Database["public"]["Enums"]["app_role"] }
+        Returns: Json
+      }
       claim_task_secure: { Args: { p_task_id: string }; Returns: Json }
       create_notification: {
         Args: {
@@ -1430,6 +1451,14 @@ export type Database = {
       }
       geomfromewkt: { Args: { "": string }; Returns: unknown }
       get_escrow_summary: { Args: { p_task_id: string }; Returns: Json }
+      get_my_wallet: {
+        Args: never
+        Returns: {
+          escrow_balance: number
+          wallet_balance: number
+          withdrawable_balance: number
+        }[]
+      }
       get_public_profile: { Args: { p_user_id: string }; Returns: Json }
       get_task_location: { Args: { p_task_id: string }; Returns: Json }
       get_user_roles: { Args: never; Returns: Json }

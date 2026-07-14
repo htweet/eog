@@ -22,13 +22,10 @@ export function WalletCard() {
 
   const fetchWithdrawable = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("profiles")
-      .select("withdrawable_balance")
-      .eq("id", user.id)
-      .single();
-    if (data) {
-      setWithdrawableBalance(data.withdrawable_balance || 0);
+    const { data } = await supabase.rpc("get_my_wallet");
+    const row = Array.isArray(data) ? data[0] : data;
+    if (row) {
+      setWithdrawableBalance(Number(row.withdrawable_balance) || 0);
     }
   };
 

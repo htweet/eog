@@ -49,7 +49,7 @@ export function VideoRecorder({
   const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
   const [loading, setLoading] = useState(true);
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Initialize camera
   const initCamera = useCallback(async () => {

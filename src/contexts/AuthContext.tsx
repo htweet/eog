@@ -134,22 +134,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error };
     }
 
-    // Insert role after signup
+    // Insert role after signup via SECURITY DEFINER RPC (client cannot directly insert into user_roles)
     if (data.user) {
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: data.user.id, role });
-      
+      const { data: rpcData, error: roleError } = await supabase.rpc('assign_signup_role', { p_role: role });
+
       if (roleError) {
         return { error: roleError };
       }
-      
+      const j = rpcData as { success?: boolean; error?: string } | null;
+      if (j && j.success === false) {
+        return { error: new Error(j.error || 'Failed to assign role') };
+      }
+
       // Set active role
       await supabase
         .from('profiles')
         .update({ active_role: role })
         .eq('id', data.user.id);
-      
+
       setUserRole(role);
       setAllRoles([role]);
     }

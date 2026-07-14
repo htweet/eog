@@ -52,16 +52,13 @@ export function WithdrawalCard() {
     accountName: "",
   });
 
-  // Fetch withdrawable balance
+  // Fetch withdrawable balance via SECURITY DEFINER RPC
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("withdrawable_balance")
-        .eq("id", user?.id)
-        .single();
-      return data;
+      const { data } = await supabase.rpc("get_my_wallet");
+      const row = Array.isArray(data) ? data[0] : data;
+      return row ? { withdrawable_balance: Number(row.withdrawable_balance) || 0 } : null;
     },
     enabled: !!user,
   });

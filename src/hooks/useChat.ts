@@ -111,7 +111,7 @@ export function useChat(taskId: string, otherUserId: string | null) {
   useEffect(() => {
     if (!taskId || !user) return;
 
-    let retryTimeout: NodeJS.Timeout | null = null;
+    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const channel = supabase
       .channel(`chat:${taskId}`)

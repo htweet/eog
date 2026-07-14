@@ -86,17 +86,11 @@ export function FundManagement() {
           : `Admin approved: ${adminNotes || 'Deposit approved'}`
       }).eq("id", selectedDeposit.id);
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("wallet_balance")
-        .eq("id", selectedDeposit.user_id)
-        .single();
-
-      if (profile) {
-        await supabase.from("profiles").update({
-          wallet_balance: (profile.wallet_balance || 0) + selectedDeposit.amount,
-        }).eq("id", selectedDeposit.user_id);
-      }
+      // Credit user wallet atomically via SECURITY DEFINER RPC (financial columns not client-writable)
+      await supabase.rpc("admin_credit_wallet", {
+        p_user_id: selectedDeposit.user_id,
+        p_amount: selectedDeposit.amount,
+      } as any);
 
       // Notify user
       await supabase.from("notifications").insert({
@@ -151,19 +145,12 @@ export function FundManagement() {
     try {
       await supabase.from("transactions").update({ status: "refunded" as any }).eq("id", deposit.id);
       
-      // If it was completed, deduct from wallet
+      // If it was completed, deduct from wallet atomically via SECURITY DEFINER RPC
       if (deposit.status === "completed") {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("wallet_balance")
-          .eq("id", deposit.user_id)
-          .single();
-
-        if (profile) {
-          await supabase.from("profiles").update({
-            wallet_balance: Math.max(0, (profile.wallet_balance || 0) - deposit.amount),
-          }).eq("id", deposit.user_id);
-        }
+        await supabase.rpc("admin_debit_wallet", {
+          p_user_id: deposit.user_id,
+          p_amount: deposit.amount,
+        } as any);
       }
 
       await supabase.from("notifications").insert({
