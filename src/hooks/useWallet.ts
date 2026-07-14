@@ -44,12 +44,9 @@ export function useWallet() {
 
     setState(prev => ({ ...prev, loading: true }));
 
-    // Fetch balance from profile
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("wallet_balance, withdrawable_balance, escrow_balance")
-      .eq("id", user.id)
-      .single();
+    // Fetch balances via SECURITY DEFINER RPC (financial columns are not selectable directly)
+    const { data: walletRows } = await supabase.rpc("get_my_wallet");
+    const wallet = Array.isArray(walletRows) ? walletRows[0] : walletRows;
 
     // Fetch transactions
     const { data: transactions } = await supabase
@@ -60,9 +57,9 @@ export function useWallet() {
       .limit(50);
 
     setState({
-      balance: profile?.wallet_balance || 0,
-      withdrawableBalance: profile?.withdrawable_balance || 0,
-      escrowBalance: profile?.escrow_balance || 0,
+      balance: Number(wallet?.wallet_balance) || 0,
+      withdrawableBalance: Number(wallet?.withdrawable_balance) || 0,
+      escrowBalance: Number(wallet?.escrow_balance) || 0,
       transactions: (transactions || []) as Transaction[],
       loading: false,
     });
