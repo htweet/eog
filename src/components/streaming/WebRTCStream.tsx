@@ -51,7 +51,7 @@ export function WebRTCStream({ taskId, taskTitle, mode, onStreamEnd }: WebRTCStr
   
   // Timer for stream duration
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setTimeout>;
     if (isStreaming) {
       interval = setInterval(() => {
         setStreamDuration((prev) => {
