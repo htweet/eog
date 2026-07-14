@@ -218,73 +218,22 @@ export function useAdmin() {
       if (!task) return;
 
       if (resolution === 'approve') {
-        // Approve the verification - pay the voucher
-        const { error: taskError } = await supabase
-          .from("tasks")
-          .update({ status: "completed" })
-          .eq("id", taskId);
+        // Approve: release escrow atomically via RPC (voucher gets paid)
+        const { error } = await supabase.rpc('release_escrow', {
+          p_task_id: taskId,
+        } as any);
+        if (error) throw error;
 
-        if (taskError) throw taskError;
-
-        // Transfer bounty to voucher
-        if (task.voucher_id) {
-          const { data: voucherProfile } = await supabase
-            .from("profiles")
-            .select("wallet_balance")
-            .eq("id", task.voucher_id)
-            .single();
-
-          if (voucherProfile) {
-            await supabase
-              .from("profiles")
-              .update({
-                wallet_balance: (voucherProfile.wallet_balance || 0) + task.bounty_amount,
-              })
-              .eq("id", task.voucher_id);
-
-            await supabase.from("transactions").insert({
-              user_id: task.voucher_id,
-              task_id: taskId,
-              type: "bounty_earned",
-              amount: task.bounty_amount,
-              status: "completed",
-              description: "Dispute resolved in favor of voucher",
-            });
-          }
-        }
+        await supabase.from('tasks').update({ status: 'completed' }).eq('id', taskId);
       } else {
-        // Reject - refund to requester
-        const { error: taskError } = await supabase
-          .from("tasks")
-          .update({ status: "cancelled" })
-          .eq("id", taskId);
+        // Reject: refund escrow atomically via RPC (requester gets refund)
+        const { error } = await supabase.rpc('refund_escrow', {
+          p_task_id: taskId,
+          p_reason: 'Dispute resolved - refunded to requester',
+        } as any);
+        if (error) throw error;
 
-        if (taskError) throw taskError;
-
-        // Refund escrow to requester
-        const { data: requesterProfile } = await supabase
-          .from("profiles")
-          .select("wallet_balance")
-          .eq("id", task.requester_id)
-          .single();
-
-        if (requesterProfile) {
-          await supabase
-            .from("profiles")
-            .update({
-              wallet_balance: (requesterProfile.wallet_balance || 0) + task.bounty_amount,
-            })
-            .eq("id", task.requester_id);
-
-          await supabase.from("transactions").insert({
-            user_id: task.requester_id,
-            task_id: taskId,
-            type: "escrow_release",
-            amount: task.bounty_amount,
-            status: "completed",
-            description: "Dispute resolved - escrow refunded",
-          });
-        }
+        await supabase.from('tasks').update({ status: 'cancelled' }).eq('id', taskId);
       }
 
       toast({

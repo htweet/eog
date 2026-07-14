@@ -86,17 +86,11 @@ export function FundManagement() {
           : `Admin approved: ${adminNotes || 'Deposit approved'}`
       }).eq("id", selectedDeposit.id);
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("wallet_balance")
-        .eq("id", selectedDeposit.user_id)
-        .single();
-
-      if (profile) {
-        await supabase.from("profiles").update({
-          wallet_balance: (profile.wallet_balance || 0) + selectedDeposit.amount,
-        }).eq("id", selectedDeposit.user_id);
-      }
+      // Credit user wallet atomically via SECURITY DEFINER RPC (financial columns not client-writable)
+      await supabase.rpc("admin_credit_wallet", {
+        p_user_id: selectedDeposit.user_id,
+        p_amount: selectedDeposit.amount,
+      } as any);
 
       // Notify user
       await supabase.from("notifications").insert({

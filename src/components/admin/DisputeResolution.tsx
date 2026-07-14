@@ -147,67 +147,28 @@ export function DisputeResolution() {
 
     try {
       if (resolutionDecision === "approve") {
-        // Approve: Pay the voucher
+        // Approve: atomically release escrow to voucher via secure RPC
+        const { error } = await supabase.rpc("release_escrow", {
+          p_task_id: selectedDispute.id,
+        } as any);
+        if (error) throw error;
+
         await supabase
           .from("tasks")
           .update({ status: "completed" })
           .eq("id", selectedDispute.id);
-
-        if (selectedDispute.voucher_id) {
-          // Add bounty to voucher's withdrawable balance
-          const { data: voucherProfile } = await supabase
-            .from("profiles")
-            .select("withdrawable_balance")
-            .eq("id", selectedDispute.voucher_id)
-            .single();
-
-          await supabase
-            .from("profiles")
-            .update({
-              withdrawable_balance: (voucherProfile?.withdrawable_balance || 0) + selectedDispute.bounty_amount,
-            })
-            .eq("id", selectedDispute.voucher_id);
-
-          // Create transaction record
-          await supabase.from("transactions").insert({
-            user_id: selectedDispute.voucher_id,
-            type: "bounty_earned",
-            amount: selectedDispute.bounty_amount,
-            status: "completed",
-            task_id: selectedDispute.id,
-            description: "Dispute resolved in voucher's favor",
-          });
-        }
       } else {
-        // Reject: Refund the requester
+        // Reject: atomically refund escrow to requester via secure RPC
+        const { error } = await supabase.rpc("refund_escrow", {
+          p_task_id: selectedDispute.id,
+          p_reason: "Dispute resolved - bounty refunded",
+        } as any);
+        if (error) throw error;
+
         await supabase
           .from("tasks")
           .update({ status: "cancelled" })
           .eq("id", selectedDispute.id);
-
-        // Add bounty back to requester's wallet
-        const { data: requesterProfile } = await supabase
-          .from("profiles")
-          .select("wallet_balance")
-          .eq("id", selectedDispute.requester_id)
-          .single();
-
-        await supabase
-          .from("profiles")
-          .update({
-            wallet_balance: (requesterProfile?.wallet_balance || 0) + selectedDispute.bounty_amount,
-          })
-          .eq("id", selectedDispute.requester_id);
-
-        // Create refund transaction
-        await supabase.from("transactions").insert({
-          user_id: selectedDispute.requester_id,
-          type: "refund",
-          amount: selectedDispute.bounty_amount,
-          status: "completed",
-          task_id: selectedDispute.id,
-          description: "Dispute resolved - bounty refunded",
-        });
       }
 
       toast.success(`Dispute ${resolutionDecision === "approve" ? "approved" : "rejected"} successfully`);
@@ -215,6 +176,7 @@ export function DisputeResolution() {
       setSelectedDispute(null);
       fetchDisputes();
     } catch (error) {
+      console.error(error);
       toast.error("Failed to resolve dispute");
     }
 
