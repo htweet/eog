@@ -142,10 +142,43 @@ export default function VerifyTask() {
     setSubmitting(true);
 
     try {
-      // Upload video to storage
+      // 1. Validate GPS coordinates against task location via cloud function
+      const { data: validation, error: validationError } = await supabase.functions.invoke(
+        "validate-verification",
+        {
+          body: {
+            task_id: task.id,
+            latitude: gpsData.latitude,
+            longitude: gpsData.longitude,
+            accuracy: gpsData.accuracy,
+            device_timestamp: gpsData.timestamp.toISOString(),
+          },
+        }
+      );
+
+      if (validationError) {
+        throw new Error(`Location validation failed: ${validationError.message}`);
+      }
+
+      if (!validation?.valid) {
+        const reason = validation?.within_radius === false
+          ? `You are ${validation?.distance_meters ?? "?"}m from the task location (max ${validation?.max_meters ?? 100}m).`
+          : validation?.timestamp_fresh === false
+          ? "Device clock is out of sync. Please fix your device time and retry."
+          : "Coordinates could not be validated.";
+        toast({
+          title: "Location check failed",
+          description: reason,
+          variant: "destructive",
+        });
+        setSubmitting(false);
+        return;
+      }
+
+      // 2. Upload watermarked video to storage
       const fileName = `${task.id}/${Date.now()}.webm`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
+
+      const { error: uploadError } = await supabase.storage
         .from("verification-videos")
         .upload(fileName, videoBlob, {
           contentType: "video/webm",
