@@ -313,6 +313,8 @@ export function VideoRecorder({
 
   return (
     <div className="space-y-4">
+      {/* Offscreen canvas used to burn GPS + timestamp watermark into recording */}
+      <canvas ref={canvasRef} className="hidden" />
       {/* Video Preview */}
       <Card className="overflow-hidden">
         <CardContent className="p-0 relative">
