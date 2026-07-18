@@ -34,9 +34,12 @@ export function VideoRecorder({
   maxDuration = 120 
 }: VideoRecorderProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  
+  const rafRef = useRef<number | null>(null);
+  const gpsRef = useRef<GPSData | null>(null);
+
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [recording, setRecording] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
