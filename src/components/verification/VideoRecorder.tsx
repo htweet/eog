@@ -137,25 +137,84 @@ export function VideoRecorder({
     }
   }, [facingMode, recording, recordedBlob, initCamera]);
 
+  const drawWatermarkedFrame = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+    const w = video.videoWidth || 1280;
+    const h = video.videoHeight || 720;
+    if (canvas.width !== w) canvas.width = w;
+    if (canvas.height !== h) canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.drawImage(video, 0, 0, w, h);
+
+    // Watermark
+    const pad = Math.max(12, Math.round(w * 0.012));
+    const fontSize = Math.max(16, Math.round(w * 0.022));
+    ctx.font = `600 ${fontSize}px system-ui, -apple-system, sans-serif`;
+    ctx.textBaseline = "bottom";
+
+    const now = new Date();
+    const timeStr = now.toISOString().replace("T", " ").split(".")[0] + " UTC";
+    const g = gpsRef.current;
+    const gpsStr = g
+      ? `GPS ${g.latitude.toFixed(6)}, ${g.longitude.toFixed(6)} (±${Math.round(g.accuracy)}m)`
+      : "GPS: acquiring...";
+    const lines = [timeStr, gpsStr];
+
+    // Bottom-left backdrop
+    const lineH = fontSize * 1.35;
+    const boxH = lineH * lines.length + pad;
+    let maxW = 0;
+    for (const l of lines) maxW = Math.max(maxW, ctx.measureText(l).width);
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.fillRect(pad / 2, h - boxH - pad / 2, maxW + pad * 2, boxH);
+    ctx.fillStyle = "#fff";
+    lines.forEach((l, i) => {
+      ctx.fillText(l, pad * 1.5, h - pad / 2 - (lines.length - 1 - i) * lineH - pad / 2);
+    });
+
+    // Top-right REC dot
+    ctx.fillStyle = "rgba(220,38,38,0.95)";
+    ctx.beginPath();
+    ctx.arc(w - pad * 2, pad * 2, fontSize * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.fillText("REC", w - pad * 2 - fontSize * 3.2, pad * 2 + fontSize * 0.5);
+
+    rafRef.current = requestAnimationFrame(drawWatermarkedFrame);
+  };
+
   const startRecording = async () => {
-    if (!stream) return;
+    if (!stream || !canvasRef.current || !videoRef.current) return;
 
     // Get fresh GPS data
     initGPS();
 
+    // Ensure video is playing to have frames
+    try { await videoRef.current.play(); } catch {}
+
     chunksRef.current = [];
     setDuration(0);
-    
-    const mediaRecorder = new MediaRecorder(stream, {
-      mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
-        ? "video/webm;codecs=vp9"
+
+    // Prime canvas size and start draw loop
+    drawWatermarkedFrame();
+
+    const canvasStream = canvasRef.current.captureStream(30);
+    // Attach original audio track
+    const audioTracks = stream.getAudioTracks();
+    audioTracks.forEach((t) => canvasStream.addTrack(t));
+
+    const mediaRecorder = new MediaRecorder(canvasStream, {
+      mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
+        ? "video/webm;codecs=vp9,opus"
         : "video/webm"
     });
 
     mediaRecorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        chunksRef.current.push(event.data);
-      }
+      if (event.data.size > 0) chunksRef.current.push(event.data);
     };
 
     mediaRecorder.onstop = () => {
@@ -163,13 +222,14 @@ export function VideoRecorder({
       setRecordedBlob(blob);
       const url = URL.createObjectURL(blob);
       setRecordedUrl(url);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
     };
 
     mediaRecorderRef.current = mediaRecorder;
-    mediaRecorder.start(1000); // Collect data every second
+    mediaRecorder.start(1000);
     setRecording(true);
 
-    // Start timer
     timerRef.current = setInterval(() => {
       setDuration((d) => {
         const newDuration = d + 1;
