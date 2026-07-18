@@ -95,12 +95,14 @@ export function VideoRecorder({
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setGpsData({
+        const g = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           accuracy: position.coords.accuracy,
           timestamp: new Date(position.timestamp),
-        });
+        };
+        setGpsData(g);
+        gpsRef.current = g;
         setGpsError(null);
       },
       (error) => {
