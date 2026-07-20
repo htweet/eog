@@ -1,4 +1,29 @@
-# Logs
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules
+.pnp
+.pnp.js
+
+# ── Build outputs ─────────────────────────────────────────────────────────────
+dist
+dist-ssr
+build
+*.local
+
+# ── Environment / secrets ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Lock files (keep only package-lock.json since project uses npm) ───────────
+bun.lock
+bun.lockb
+yarn.lock
+pnpm-lock.yaml
+
+# ── TypeScript ────────────────────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
 logs
 *.log
 npm-debug.log*
@@ -7,18 +32,26 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# ── Test / coverage ───────────────────────────────────────────────────────────
+coverage
+.nyc_output
+playwright-report
+test-results
 
-# Editor directories and files
+# ── Supabase local dev ────────────────────────────────────────────────────────
+.supabase
+
+# ── Editor ────────────────────────────────────────────────────────────────────
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
