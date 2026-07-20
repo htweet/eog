@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.validate-verification]
 verify_jwt = false
+
+[functions.suggest-bounty-price]
+verify_jwt = true
