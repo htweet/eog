@@ -27,6 +27,8 @@ import Landing from "./pages/Landing";
 import AgencyDashboard from "./pages/AgencyDashboard";
 import AgencyRegistration from "./pages/AgencyRegistration";
 import Subscribe from "./pages/Subscribe";
+import GuildHub from "./pages/GuildHub";
+import Leaderboard from "./pages/Leaderboard";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
@@ -199,6 +201,22 @@ const App = () => (
                   <AgencyDashboard />
                 </ProtectedRoute>
               } 
+            />
+            <Route
+              path="/guilds"
+              element={
+                <ProtectedRoute>
+                  <GuildHub />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/leaderboard"
+              element={
+                <ProtectedRoute>
+                  <Leaderboard />
+                </ProtectedRoute>
+              }
             />
             <Route path="/install" element={<Install />} />
             <Route 

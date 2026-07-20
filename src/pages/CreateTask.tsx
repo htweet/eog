@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, DollarSign, ArrowLeft, ClipboardList, AlertCircle, Wallet, Crown, Users } from "lucide-react";
+import { Loader2, DollarSign, ArrowLeft, ClipboardList, AlertCircle, Wallet, Crown, Users, Sparkles, TrendingUp, Zap } from "lucide-react";
 
 const categories = [
   { value: "auto", label: "Automobiles", icon: "🚗" },
@@ -51,11 +51,33 @@ export default function CreateTask() {
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [requiredTier, setRequiredTier] = useState<"any" | "pro_only">("any");
+  const [isSuggestingPrice, setIsSuggestingPrice] = useState(false);
+  const [priceSuggestion, setPriceSuggestion] = useState<{ min: number; max: number; reasoning: string } | null>(null);
 
   const parsedBounty = parseFloat(bountyAmount) || 0;
   const proFeeMultiplier = requiredTier === "pro_only" ? PRO_FEE_MULTIPLIER : 1;
   const finalBounty = parsedBounty * proFeeMultiplier;
   const hasInsufficientBalance = finalBounty > balance;
+
+  const handleSuggestPrice = async () => {
+    if (!title || !category) {
+      toast({ title: "Add a title and category first", variant: "destructive" });
+      return;
+    }
+    setIsSuggestingPrice(true);
+    setPriceSuggestion(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("suggest-bounty-price", {
+        body: { title, category, description },
+      });
+      if (error) throw error;
+      setPriceSuggestion(data);
+    } catch (err) {
+      toast({ title: "Could not get price suggestion", description: "Try again or set manually", variant: "destructive" });
+    } finally {
+      setIsSuggestingPrice(false);
+    }
+  };
 
   const handleCoordinatesChange = (lat: number, lng: number) => {
     setLatitude(lat);
@@ -299,7 +321,59 @@ export default function CreateTask() {
 
               {/* Bounty Amount */}
               <div className="space-y-2">
-                <Label htmlFor="bounty">Base Bounty Amount *</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="bounty">Base Bounty Amount *</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1.5 text-xs text-violet-500 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950"
+                    onClick={handleSuggestPrice}
+                    disabled={isSuggestingPrice || !title || !category}
+                  >
+                    {isSuggestingPrice ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    AI Suggest Price
+                  </Button>
+                </div>
+
+                {/* AI Price Suggestion Banner */}
+                {priceSuggestion && (
+                  <div className="rounded-lg border border-violet-200 bg-violet-50 dark:border-violet-800 dark:bg-violet-950/30 p-3 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-xs font-semibold text-violet-700 dark:text-violet-400 flex items-center gap-1">
+                          <TrendingUp className="h-3 w-3" /> AI Price Suggestion
+                        </p>
+                        <p className="text-sm text-violet-900 dark:text-violet-200 font-bold mt-0.5">
+                          ₦{priceSuggestion.min.toLocaleString()} – ₦{priceSuggestion.max.toLocaleString()}
+                        </p>
+                        {priceSuggestion.reasoning && (
+                          <p className="text-xs text-violet-600 dark:text-violet-400 mt-1">{priceSuggestion.reasoning}</p>
+                        )}
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs border-violet-300"
+                          onClick={() => setBountyAmount(String(priceSuggestion.min))}
+                        >
+                          Use Min
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="h-7 text-xs bg-violet-600 hover:bg-violet-700"
+                          onClick={() => setBountyAmount(String(priceSuggestion.max))}
+                        >
+                          Use Max
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input

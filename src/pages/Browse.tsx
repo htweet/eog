@@ -25,6 +25,9 @@ interface Task {
   latitude: number | null;
   longitude: number | null;
   required_tier: string | null;
+  is_flash: boolean | null;
+  flash_expires_at: string | null;
+  is_featured: boolean | null;
 }
 
 const categories = [
@@ -296,6 +299,9 @@ export default function Browse() {
                   timePosted={getTimeAgo(task.created_at)}
                   urgency="medium"
                   isPro={task.required_tier === "pro_only"}
+                  isFlash={task.is_flash ?? false}
+                  flashExpiresAt={task.flash_expires_at}
+                  isFeatured={task.is_featured ?? false}
                   onClick={() => navigate(`/task/${task.id}`)}
                 />
               </div>

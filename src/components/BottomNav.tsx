@@ -1,4 +1,4 @@
-import { Home, Search, PlusCircle, User, Settings, Building2 } from "lucide-react";
+import { Home, Search, PlusCircle, User, Settings, Users, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,7 +7,7 @@ export function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { userRole, allRoles, isAdmin } = useAuth();
-  const showAgency = isAdmin || allRoles.includes('voucher');
+  const isVoucher = userRole === "voucher" || allRoles.includes("voucher");
 
   // Determine home path based on active role
   const getHomePath = () => {
@@ -44,19 +44,20 @@ export function BottomNav() {
       active: location.pathname === "/create-task",
       primary: true
     }] : []),
-    // Agency link for vouchers and admins
-    ...(showAgency ? [{
-      icon: Building2,
-      label: "Agency",
-      path: "/dashboard/agency",
-      active: location.pathname === "/dashboard/agency"
+    // Guilds link for vouchers
+    ...(isVoucher ? [{
+      icon: Users,
+      label: "Guilds",
+      path: "/guilds",
+      active: location.pathname === "/guilds" || location.pathname === "/leaderboard"
     }] : []),
-    { 
-      icon: Settings, 
-      label: "Settings", 
-      path: "/settings", 
-      active: location.pathname === "/settings" 
-    },
+    // Leaderboard for requesters (compact nav)
+    ...(!isVoucher && userRole === "requester" ? [{
+      icon: Trophy,
+      label: "Ranks",
+      path: "/leaderboard",
+      active: location.pathname === "/leaderboard"
+    }] : []),
     { 
       icon: User, 
       label: "Profile", 

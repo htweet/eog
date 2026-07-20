@@ -8,7 +8,8 @@ import { ReviewsList } from "@/components/review/ReviewsList";
 import { WalletCard } from "@/components/wallet/WalletCard";
 import { WithdrawalCard } from "@/components/wallet/WithdrawalCard";
 import { ProOpportunitiesSection } from "@/components/voucher/ProOpportunitiesSection";
-import { MapPin, DollarSign, Star, CheckCircle, Clock, Briefcase, Eye } from "lucide-react";
+import { VouchScoreBadge } from "@/components/voucher/VouchScoreBadge";
+import { MapPin, DollarSign, Star, CheckCircle, Clock, Briefcase, Eye, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useRealtimeTaskNotifications } from "@/hooks/useRealtimeTaskNotifications";
 import { PushPermissionBanner } from "@/components/notifications/PushPermissionBanner";
@@ -27,6 +28,9 @@ interface ProfileData {
   trust_score: number | null;
   wallet_balance: number | null;
   is_verified: boolean | null;
+  vouchscore: number | null;
+  voucher_level: string | null;
+  vouchscore_breakdown: Record<string, number> | null;
 }
 
 export function VoucherDashboard() {
@@ -70,7 +74,7 @@ export function VoucherDashboard() {
     // Fetch profile (non-financial columns)
     const { data: profileData, error: profileError } = await supabase
       .from("profiles")
-      .select("trust_score, is_verified")
+      .select("trust_score, is_verified, vouchscore, voucher_level, vouchscore_breakdown")
       .eq("id", user.id)
       .single();
 
@@ -82,6 +86,9 @@ export function VoucherDashboard() {
       setProfile({
         ...(profileData as any),
         wallet_balance: Number(wallet?.wallet_balance) || 0,
+        vouchscore: Number((profileData as any)?.vouchscore) || 0,
+        voucher_level: (profileData as any)?.voucher_level || 'bronze',
+        vouchscore_breakdown: (profileData as any)?.vouchscore_breakdown || null,
       });
     }
 
@@ -148,6 +155,15 @@ export function VoucherDashboard() {
           Browse Tasks
         </Button>
       </div>
+
+      {/* VouchScore™ Badge */}
+      {profile && (
+        <VouchScoreBadge
+          score={profile.vouchscore || 0}
+          level={profile.voucher_level || 'bronze'}
+          breakdown={profile.vouchscore_breakdown as any}
+        />
+      )}
 
       {/* Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
