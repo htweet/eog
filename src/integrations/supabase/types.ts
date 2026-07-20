@@ -14,6 +14,85 @@ export type Database = {
   }
   public: {
     Tables: {
+      certificates: {
+        Row: {
+          address: string
+          ai_analysis_score: number | null
+          category: string
+          certificate_number: string
+          checklist_summary: Json | null
+          created_at: string | null
+          gps_latitude: number | null
+          gps_longitude: number | null
+          id: string
+          item_title: string
+          pdf_url: string | null
+          requester_id: string
+          task_id: string
+          verified_at: string
+          voucher_id: string
+          vouchscore_at_time: number | null
+        }
+        Insert: {
+          address: string
+          ai_analysis_score?: number | null
+          category: string
+          certificate_number: string
+          checklist_summary?: Json | null
+          created_at?: string | null
+          gps_latitude?: number | null
+          gps_longitude?: number | null
+          id?: string
+          item_title: string
+          pdf_url?: string | null
+          requester_id: string
+          task_id: string
+          verified_at: string
+          voucher_id: string
+          vouchscore_at_time?: number | null
+        }
+        Update: {
+          address?: string
+          ai_analysis_score?: number | null
+          category?: string
+          certificate_number?: string
+          checklist_summary?: Json | null
+          created_at?: string | null
+          gps_latitude?: number | null
+          gps_longitude?: number | null
+          id?: string
+          item_title?: string
+          pdf_url?: string | null
+          requester_id?: string
+          task_id?: string
+          verified_at?: string
+          voucher_id?: string
+          vouchscore_at_time?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: true
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dispute_messages: {
         Row: {
           created_at: string | null
@@ -207,6 +286,113 @@ export type Database = {
           },
         ]
       }
+      guild_members: {
+        Row: {
+          earnings_contributed: number | null
+          guild_id: string
+          id: string
+          joined_at: string | null
+          role: string
+          tasks_contributed: number | null
+          user_id: string
+        }
+        Insert: {
+          earnings_contributed?: number | null
+          guild_id: string
+          id?: string
+          joined_at?: string | null
+          role?: string
+          tasks_contributed?: number | null
+          user_id: string
+        }
+        Update: {
+          earnings_contributed?: number | null
+          guild_id?: string
+          id?: string
+          joined_at?: string | null
+          role?: string
+          tasks_contributed?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guild_members_guild_id_fkey"
+            columns: ["guild_id"]
+            isOneToOne: false
+            referencedRelation: "guilds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guild_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guilds: {
+        Row: {
+          badge_color: string | null
+          badge_emoji: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_open: boolean | null
+          leader_id: string
+          max_members: number | null
+          member_count: number | null
+          name: string
+          rank: number | null
+          total_earnings: number | null
+          total_tasks: number | null
+          updated_at: string | null
+          weekly_earnings: number | null
+        }
+        Insert: {
+          badge_color?: string | null
+          badge_emoji?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_open?: boolean | null
+          leader_id: string
+          max_members?: number | null
+          member_count?: number | null
+          name: string
+          rank?: number | null
+          total_earnings?: number | null
+          total_tasks?: number | null
+          updated_at?: string | null
+          weekly_earnings?: number | null
+        }
+        Update: {
+          badge_color?: string | null
+          badge_emoji?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_open?: boolean | null
+          leader_id?: string
+          max_members?: number | null
+          member_count?: number | null
+          name?: string
+          rank?: number | null
+          total_earnings?: number | null
+          total_tasks?: number | null
+          updated_at?: string | null
+          weekly_earnings?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guilds_leader_id_fkey"
+            columns: ["leader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_streams: {
         Row: {
           ended_at: string | null
@@ -303,6 +489,41 @@ export type Database = {
             columns: ["task_id"]
             isOneToOne: false
             referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      milestones: {
+        Row: {
+          achieved_at: string | null
+          id: string
+          milestone_key: string
+          naira_reward: number | null
+          user_id: string
+          vc_reward: number | null
+        }
+        Insert: {
+          achieved_at?: string | null
+          id?: string
+          milestone_key: string
+          naira_reward?: number | null
+          user_id: string
+          vc_reward?: number | null
+        }
+        Update: {
+          achieved_at?: string | null
+          id?: string
+          milestone_key?: string
+          naira_reward?: number | null
+          user_id?: string
+          vc_reward?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestones_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -574,58 +795,157 @@ export type Database = {
         Row: {
           active_role: string | null
           avatar_url: string | null
+          avg_gps_accuracy: number | null
+          avg_response_hours: number | null
           bio: string | null
           company_details: Json | null
           created_at: string | null
           current_location: unknown
           escrow_balance: number | null
           full_name: string | null
+          guild_id: string | null
           id: string
           is_online: boolean | null
           is_verified: boolean | null
           last_seen_at: string | null
+          referral_code: string | null
+          referred_by: string | null
+          total_tasks_completed: number | null
+          total_tasks_disputed: number | null
           trust_score: number | null
+          voucher_level: string | null
           voucher_tier: Database["public"]["Enums"]["voucher_tier"] | null
+          vouchscore: number | null
+          vouchscore_breakdown: Json | null
           wallet_balance: number | null
           withdrawable_balance: number | null
         }
         Insert: {
           active_role?: string | null
           avatar_url?: string | null
+          avg_gps_accuracy?: number | null
+          avg_response_hours?: number | null
           bio?: string | null
           company_details?: Json | null
           created_at?: string | null
           current_location?: unknown
           escrow_balance?: number | null
           full_name?: string | null
+          guild_id?: string | null
           id: string
           is_online?: boolean | null
           is_verified?: boolean | null
           last_seen_at?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
+          total_tasks_completed?: number | null
+          total_tasks_disputed?: number | null
           trust_score?: number | null
+          voucher_level?: string | null
           voucher_tier?: Database["public"]["Enums"]["voucher_tier"] | null
+          vouchscore?: number | null
+          vouchscore_breakdown?: Json | null
           wallet_balance?: number | null
           withdrawable_balance?: number | null
         }
         Update: {
           active_role?: string | null
           avatar_url?: string | null
+          avg_gps_accuracy?: number | null
+          avg_response_hours?: number | null
           bio?: string | null
           company_details?: Json | null
           created_at?: string | null
           current_location?: unknown
           escrow_balance?: number | null
           full_name?: string | null
+          guild_id?: string | null
           id?: string
           is_online?: boolean | null
           is_verified?: boolean | null
           last_seen_at?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
+          total_tasks_completed?: number | null
+          total_tasks_disputed?: number | null
           trust_score?: number | null
+          voucher_level?: string | null
           voucher_tier?: Database["public"]["Enums"]["voucher_tier"] | null
+          vouchscore?: number | null
+          vouchscore_breakdown?: Json | null
           wallet_balance?: number | null
           withdrawable_balance?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_guild_id_fkey"
+            columns: ["guild_id"]
+            isOneToOne: false
+            referencedRelation: "guilds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          activated_at: string | null
+          created_at: string | null
+          id: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          reward_amount: number | null
+          rewarded_at: string | null
+          status: string
+          vc_reward: number | null
+        }
+        Insert: {
+          activated_at?: string | null
+          created_at?: string | null
+          id?: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          reward_amount?: number | null
+          rewarded_at?: string | null
+          status?: string
+          vc_reward?: number | null
+        }
+        Update: {
+          activated_at?: string | null
+          created_at?: string | null
+          id?: string
+          referral_code?: string
+          referred_id?: string
+          referrer_id?: string
+          reward_amount?: number | null
+          rewarded_at?: string | null
+          status?: string
+          vc_reward?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referred_id_fkey"
+            columns: ["referred_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {
@@ -693,6 +1013,47 @@ export type Database = {
         }
         Relationships: []
       }
+      streaks: {
+        Row: {
+          created_at: string | null
+          current_streak: number
+          id: string
+          last_activity_date: string | null
+          longest_streak: number
+          streak_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_streak?: number
+          id?: string
+          last_activity_date?: string | null
+          longest_streak?: number
+          streak_type?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_streak?: number
+          id?: string
+          last_activity_date?: string | null
+          longest_streak?: number
+          streak_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "streaks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_applications: {
         Row: {
           bid_message: string | null
@@ -744,12 +1105,22 @@ export type Database = {
       tasks: {
         Row: {
           address: string
+          ai_price_max: number | null
+          ai_price_min: number | null
+          application_count: number | null
           bounty_amount: number
           category: string
+          certificate_url: string | null
           checklist: Json | null
           created_at: string | null
           description: string | null
+          featured_until: string | null
+          flash_expires_at: string | null
+          flash_multiplier: number | null
+          has_certificate: boolean | null
           id: string
+          is_featured: boolean | null
+          is_flash: boolean | null
           latitude: number | null
           longitude: number | null
           pro_fee_multiplier: number | null
@@ -757,16 +1128,27 @@ export type Database = {
           required_tier: Database["public"]["Enums"]["task_tier"] | null
           status: string | null
           title: string
+          view_count: number | null
           voucher_id: string | null
         }
         Insert: {
           address: string
+          ai_price_max?: number | null
+          ai_price_min?: number | null
+          application_count?: number | null
           bounty_amount: number
           category: string
+          certificate_url?: string | null
           checklist?: Json | null
           created_at?: string | null
           description?: string | null
+          featured_until?: string | null
+          flash_expires_at?: string | null
+          flash_multiplier?: number | null
+          has_certificate?: boolean | null
           id?: string
+          is_featured?: boolean | null
+          is_flash?: boolean | null
           latitude?: number | null
           longitude?: number | null
           pro_fee_multiplier?: number | null
@@ -774,16 +1156,27 @@ export type Database = {
           required_tier?: Database["public"]["Enums"]["task_tier"] | null
           status?: string | null
           title: string
+          view_count?: number | null
           voucher_id?: string | null
         }
         Update: {
           address?: string
+          ai_price_max?: number | null
+          ai_price_min?: number | null
+          application_count?: number | null
           bounty_amount?: number
           category?: string
+          certificate_url?: string | null
           checklist?: Json | null
           created_at?: string | null
           description?: string | null
+          featured_until?: string | null
+          flash_expires_at?: string | null
+          flash_multiplier?: number | null
+          has_certificate?: boolean | null
           id?: string
+          is_featured?: boolean | null
+          is_flash?: boolean | null
           latitude?: number | null
           longitude?: number | null
           pro_fee_multiplier?: number | null
@@ -791,6 +1184,7 @@ export type Database = {
           required_tier?: Database["public"]["Enums"]["task_tier"] | null
           status?: string | null
           title?: string
+          view_count?: number | null
           voucher_id?: string | null
         }
         Relationships: [
@@ -973,6 +1367,51 @@ export type Database = {
           },
         ]
       }
+      vc_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string | null
+          id: string
+          task_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          task_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          task_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vc_transactions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vc_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       verifications: {
         Row: {
           ai_analysis_result: Json | null
@@ -1019,6 +1458,41 @@ export type Database = {
             columns: ["task_id"]
             isOneToOne: false
             referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vouch_credits: {
+        Row: {
+          balance: number
+          created_at: string | null
+          id: string
+          lifetime_earned: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string | null
+          id?: string
+          lifetime_earned?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string | null
+          id?: string
+          lifetime_earned?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vouch_credits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1308,7 +1782,19 @@ export type Database = {
         Args: { p_role: Database["public"]["Enums"]["app_role"] }
         Returns: Json
       }
+      award_vouch_credits: {
+        Args: {
+          p_amount: number
+          p_description?: string
+          p_task_id?: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      claim_referral: { Args: { p_referral_code: string }; Returns: Json }
       claim_task_secure: { Args: { p_task_id: string }; Returns: Json }
+      convert_vc_to_naira: { Args: { p_vc_amount: number }; Returns: Json }
       create_notification: {
         Args: {
           p_message: string
@@ -1451,6 +1937,21 @@ export type Database = {
       }
       geomfromewkt: { Args: { "": string }; Returns: unknown }
       get_escrow_summary: { Args: { p_task_id: string }; Returns: Json }
+      get_guild_leaderboard: {
+        Args: never
+        Returns: {
+          badge_color: string
+          badge_emoji: string
+          guild_id: string
+          member_count: number
+          name: string
+          rank: number
+          total_earnings: number
+          total_tasks: number
+          weekly_earnings: number
+        }[]
+      }
+      get_my_vouch_credits: { Args: never; Returns: Json }
       get_my_wallet: {
         Args: never
         Returns: {
@@ -1465,6 +1966,18 @@ export type Database = {
       get_verification_video_url: {
         Args: { p_task_id: string }
         Returns: string
+      }
+      get_voucher_leaderboard: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          full_name: string
+          rank: number
+          total_tasks_completed: number
+          user_id: string
+          voucher_level: string
+          vouchscore: number
+        }[]
       }
       gettransactionid: { Args: never; Returns: unknown }
       has_role: {
@@ -1523,6 +2036,10 @@ export type Database = {
       process_deposit_secure: {
         Args: { p_amount: number; p_transaction_id: string; p_tx_ref: string }
         Returns: Json
+      }
+      recalculate_vouchscore: {
+        Args: { p_voucher_id: string }
+        Returns: number
       }
       refund_escrow: {
         Args: { p_admin_id?: string; p_reason?: string; p_task_id: string }
@@ -2124,6 +2641,10 @@ export type Database = {
         Returns: unknown
       }
       unlockrows: { Args: { "": string }; Returns: number }
+      update_streak_on_completion: {
+        Args: { p_voucher_id: string }
+        Returns: undefined
+      }
       updategeometrysrid: {
         Args: {
           catalogn_name: string
