@@ -1992,6 +1992,10 @@ export type Database = {
         Args: { p_amount: number; p_task_id: string }
         Returns: Json
       }
+      initialize_first_admin: {
+        Args: { p_full_name: string; p_user_id: string }
+        Returns: Json
+      }
       longtransactionsenabled: { Args: never; Returns: boolean }
       populate_geometry_columns:
         | { Args: { tbl_oid: unknown; use_typmod?: boolean }; Returns: number }
