@@ -208,14 +208,17 @@ export default function VerifyTask() {
         throw new Error(`Verification creation failed: ${verificationError.message}`);
       }
 
-      // Update task status to pending_review
-      const { error: taskError } = await supabase
-        .from("tasks")
-        .update({ status: "pending_review" })
-        .eq("id", task.id);
+      // Update task status to pending_review via SECURITY DEFINER RPC
+      // (direct UPDATE is blocked by RLS for vouchers)
+      const { data: reviewResult, error: taskError } = await supabase
+        .rpc("submit_task_for_review", { p_task_id: task.id });
 
       if (taskError) {
         throw new Error(`Task update failed: ${taskError.message}`);
+      }
+
+      if (reviewResult && !(reviewResult as any).success) {
+        throw new Error(`Task update failed: ${(reviewResult as any).error}`);
       }
 
       // Notify the requester about the verification submission
