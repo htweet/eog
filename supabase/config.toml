@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.suggest-bounty-price]
 verify_jwt = true
+
+[functions.generate-certificate]
+verify_jwt = true

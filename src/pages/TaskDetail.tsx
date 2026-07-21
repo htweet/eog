@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { TaskCompletionBanner } from "@/components/task/TaskCompletionBanner";
+import { CertificateDownloadButton } from "@/components/certificate/CertificateDownloadButton";
 import { ReviewsList } from "@/components/review/ReviewsList";
 import { WebRTCStream } from "@/components/streaming/WebRTCStream";
 import { TaskChat } from "@/components/chat/TaskChat";
@@ -527,6 +528,13 @@ export default function TaskDetail() {
               otherUserId={isRequester ? task.voucher_id : task.requester_id}
               otherUserName={isRequester ? voucher?.full_name || "Voucher" : requester?.full_name || "Requester"}
             />
+          </div>
+        )}
+
+        {/* Certificate Download for completed tasks */}
+        {task.status === "completed" && (isRequester || isVoucher) && (
+          <div className="mt-4">
+            <CertificateDownloadButton taskId={task.id} size="default" className="w-full" />
           </div>
         )}
 

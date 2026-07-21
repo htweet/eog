@@ -29,6 +29,7 @@ import AgencyRegistration from "./pages/AgencyRegistration";
 import Subscribe from "./pages/Subscribe";
 import GuildHub from "./pages/GuildHub";
 import Leaderboard from "./pages/Leaderboard";
+import VerifyCertificate from "./pages/VerifyCertificate";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
@@ -218,6 +219,8 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            {/* Public certificate verification — no auth required */}
+            <Route path="/verify/:certNumber" element={<VerifyCertificate />} />
             <Route path="/install" element={<Install />} />
             <Route 
               path="/subscribe" 

@@ -26,7 +26,9 @@ import {
   Star,
   Check,
   X,
+  PartyPopper,
 } from "lucide-react";
+import { CertificateDownloadButton } from "@/components/certificate/CertificateDownloadButton";
 
 interface Task {
   id: string;
@@ -78,6 +80,7 @@ export default function ReviewTask() {
   const [rating, setRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
   const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [approved, setApproved] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -244,7 +247,7 @@ export default function ReviewTask() {
         description: `The voucher has been paid ₦${task.bounty_amount.toLocaleString()}`,
       });
 
-      navigate(`/task/${task.id}`);
+      setApproved(true);
     } catch (error) {
       console.error("Approval error:", error);
       toast({
@@ -346,6 +349,40 @@ export default function ReviewTask() {
 
   if (!task || !verification) {
     return null;
+  }
+
+  // Post-approval success screen
+  if (approved) {
+    return (
+      <div className="min-h-screen bg-background pb-20 md:pb-0">
+        <Header />
+        <main className="container max-w-lg py-16">
+          <Card>
+            <CardContent className="pt-8 pb-8 text-center space-y-4">
+              <div className="h-16 w-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto">
+                <PartyPopper className="h-8 w-8 text-green-500" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Verification Approved!</h2>
+                <p className="text-muted-foreground text-sm mt-1">
+                  ₦{task.bounty_amount.toLocaleString()} has been released to the voucher.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 pt-2">
+                <CertificateDownloadButton taskId={task.id} size="lg" className="w-full" />
+                <Button
+                  variant="outline"
+                  onClick={() => navigate(`/task/${task.id}`)}
+                >
+                  View Task
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </main>
+        <BottomNav />
+      </div>
+    );
   }
 
   const checklist = task.checklist || [];
