@@ -30,6 +30,7 @@ import Subscribe from "./pages/Subscribe";
 import GuildHub from "./pages/GuildHub";
 import Leaderboard from "./pages/Leaderboard";
 import VerifyCertificate from "./pages/VerifyCertificate";
+import Setup from "./pages/Setup";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
@@ -221,6 +222,8 @@ const App = () => (
             />
             {/* Public certificate verification — no auth required */}
             <Route path="/verify/:certNumber" element={<VerifyCertificate />} />
+            {/* CodeCanyon setup wizard — public, no auth required */}
+            <Route path="/setup" element={<Setup />} />
             <Route path="/install" element={<Install />} />
             <Route 
               path="/subscribe" 
