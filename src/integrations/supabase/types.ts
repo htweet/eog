@@ -2644,6 +2644,7 @@ export type Database = {
         Args: { geom: unknown; move: number; wrap: number }
         Returns: unknown
       }
+      submit_task_for_review: { Args: { p_task_id: string }; Returns: Json }
       unlockrows: { Args: { "": string }; Returns: number }
       update_streak_on_completion: {
         Args: { p_voucher_id: string }

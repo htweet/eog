@@ -59,7 +59,7 @@ export default function VerifyCertificate() {
       return;
     }
 
-    setCert(data as Certificate);
+    setCert(data as unknown as Certificate);
 
     // Fetch voucher name
     if (data.voucher_id) {
